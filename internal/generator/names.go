@@ -3,12 +3,14 @@ package generator
 import (
 	"strings"
 	"unicode"
+
+	"github.com/alesr/mcpgen/internal/pkg/strutil"
 )
 
 // sanitizes an arbitrary string into a valid, exported Go PascalCase identifier,
 // ensuring it starts with a letter (prefixed with 'N' if the input begins with a digit).
 func goIdent(input string) string {
-	parts := splitIdentifier(input)
+	parts := strutil.SplitIdentifier(input)
 	if len(parts) == 0 {
 		return "Item"
 	}
@@ -32,15 +34,9 @@ func goIdent(input string) string {
 }
 
 func goFileName(input string) string {
-	parts := splitIdentifier(strings.ToLower(input))
+	parts := strutil.SplitIdentifier(strings.ToLower(input))
 	if len(parts) == 0 {
 		return "item"
 	}
 	return strings.Join(parts, "_") // snake_case
-}
-
-func splitIdentifier(input string) []string {
-	return strings.FieldsFunc(input, func(r rune) bool {
-		return !unicode.IsLetter(r) && !unicode.IsDigit(r)
-	})
 }
