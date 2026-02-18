@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/alesr/mcpgen/internal/config"
-	"github.com/alesr/mcpgen/internal/pkg/strutil"
+	"github.com/alesr/mcpgen/internal/pkg/utils"
 )
 
 func DefaultConfig(outDir, transport string, port int, addTool, addResource, addPrompt bool) (*config.Config, string) {
@@ -77,15 +77,8 @@ Summary
 `, cfg.Server.Name, cfg.Server.Version, cfg.Server.Module, featureList, resourceDetail, outDir)
 }
 
-func DefaultIfEmpty(value string, def string) string {
-	if strings.TrimSpace(value) == "" {
-		return def
-	}
-	return value
-}
-
 func PrintInspectorHint(outDir string, cfg *config.Config) {
-	serverName := DefaultServerName(cfg.Server.Name)
+	serverName := utils.DefaultServerName(cfg.Server.Name)
 
 	if cfg.Transport.Type == "http" {
 		fmt.Printf(`
@@ -107,12 +100,4 @@ Open in Inspector:
   npx @modelcontextprotocol/inspector
   (In the UI, choose stdio and run: go run ./cmd/%s)
 `, outDir, serverName)
-}
-
-func DefaultServerName(name string) string {
-	parts := strutil.SplitIdentifier(strings.ToLower(name))
-	if len(parts) == 0 {
-		return "mcp"
-	}
-	return strings.Join(parts, "_")
 }

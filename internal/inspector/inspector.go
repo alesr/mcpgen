@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/alesr/mcpgen/internal/config"
-	"github.com/alesr/mcpgen/internal/scaffold"
+	"github.com/alesr/mcpgen/internal/pkg/utils"
 )
 
 type inspectorCall struct {
@@ -19,7 +19,7 @@ type inspectorCall struct {
 }
 
 func RunTest(outDir string, cfg *config.Config) error {
-	serverName := scaffold.DefaultServerName(cfg.Server.Name)
+	serverName := utils.DefaultServerName(cfg.Server.Name)
 	methods := make([]inspectorCall, 0)
 
 	if len(cfg.Tools) > 0 {

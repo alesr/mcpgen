@@ -1,12 +1,19 @@
 package generator
 
 import (
+	"errors"
 	"fmt"
 	"go/format"
 	"os"
 	"path/filepath"
 
 	"github.com/alesr/mcpgen/internal/config"
+	"github.com/alesr/mcpgen/internal/pkg/utils"
+)
+
+var (
+	errConfigIsNil = errors.New("config is nil")
+	errOutDirEmpty = errors.New("out dir is required")
 )
 
 type Generator struct {
@@ -23,7 +30,8 @@ func (g *Generator) Run() error {
 		return fmt.Errorf("could not cleanup generated files: %w", err)
 	}
 
-	serverName := g.serverName()
+	serverName := utils.DefaultServerName(g.Config.Server.Name)
+
 	if err := g.ensureOutputDirs(serverName); err != nil {
 		return fmt.Errorf("could not ensure output dirs: %w", err)
 	}
@@ -37,21 +45,12 @@ func (g *Generator) Run() error {
 
 func (g *Generator) validate() error {
 	if g.Config == nil {
-		return fmt.Errorf("config is nil")
+		return errConfigIsNil
 	}
-
 	if g.OutDir == "" {
-		return fmt.Errorf("out dir is required")
+		return errOutDirEmpty
 	}
 	return nil
-}
-
-func (g *Generator) serverName() string {
-	serverName := goFileName(g.Config.Server.Name)
-	if serverName == "" {
-		return "mcp"
-	}
-	return serverName
 }
 
 func (g *Generator) ensureOutputDirs(serverName string) error {
