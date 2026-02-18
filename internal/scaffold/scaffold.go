@@ -96,8 +96,8 @@ Open in Inspector:
   (In the UI, set transport to HTTP and use http://localhost:%d/mcp)
 
   Single command:
-    sh -c 'go run ./cmd/%s & npx @modelcontextprotocol/inspector'
-`, outDir, serverName, cfg.Transport.HTTPPort, serverName)
+  	cd generated && npx @modelcontextprotocol/inspector
+`, outDir, serverName, cfg.Transport.HTTPPort)
 		return
 	}
 
