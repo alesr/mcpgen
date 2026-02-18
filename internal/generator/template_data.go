@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/alesr/mcpgen/internal/config"
+	"github.com/alesr/mcpgen/internal/pkg/utils"
 )
 
 type TemplateData struct {
@@ -82,7 +83,7 @@ func buildTemplateData(cfg *config.Config, serverName string) TemplateData {
 	for _, tool := range cfg.Tools {
 		data.Tools = append(data.Tools, ToolData{
 			ID:           tool.ID,
-			GoName:       goIdent(tool.ID),
+			GoName:       utils.GoIdent(tool.ID),
 			Title:        tool.Title,
 			Description:  tool.Description,
 			InputSchema:  normalizeJSON(tool.InputSchema),
@@ -98,7 +99,7 @@ func buildTemplateData(cfg *config.Config, serverName string) TemplateData {
 
 		data.Resources = append(data.Resources, ResourceData{
 			ID:          res.ID,
-			GoName:      goIdent(res.ID),
+			GoName:      utils.GoIdent(res.ID),
 			Title:       res.Title,
 			Description: res.Description,
 			URI:         res.URI,
@@ -112,7 +113,7 @@ func buildTemplateData(cfg *config.Config, serverName string) TemplateData {
 	for _, prompt := range cfg.Prompts {
 		p := PromptData{
 			ID:          prompt.ID,
-			GoName:      goIdent(prompt.ID),
+			GoName:      utils.GoIdent(prompt.ID),
 			Title:       prompt.Title,
 			Description: prompt.Description,
 			Template:    prompt.Template,

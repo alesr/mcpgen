@@ -3,6 +3,8 @@ package config
 import (
 	"regexp"
 	"strings"
+
+	"github.com/alesr/mcpgen/internal/pkg/utils"
 )
 
 const (
@@ -40,7 +42,7 @@ func defaultToolTitle(id string) string {
 	if strings.EqualFold(id, "greet") {
 		return "Greet"
 	}
-	return titleCaseID(id)
+	return utils.TitleCaseID(id)
 }
 
 func defaultToolDescription(id string) string {
@@ -54,7 +56,7 @@ func defaultResourceTitle(id string) string {
 	if strings.EqualFold(id, "readme") {
 		return "Readme"
 	}
-	return titleCaseID(id)
+	return utils.TitleCaseID(id)
 }
 
 func defaultResourceDescription(id string) string {
@@ -75,7 +77,7 @@ func defaultPromptTitle(id string) string {
 	if strings.EqualFold(id, "welcome") {
 		return "Welcome"
 	}
-	return titleCaseID(id)
+	return utils.TitleCaseID(id)
 }
 
 func defaultPromptDescription(id string) string {

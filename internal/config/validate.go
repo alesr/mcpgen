@@ -12,12 +12,10 @@ import (
 func (c *Config) validateServer() []string {
 	errs := make([]string, 0)
 	if strings.TrimSpace(c.Server.Name) == "" {
-		errs = append(errs, "server.name is required")
+		errs = append(errs, "server name")
 	}
 
-	if strings.TrimSpace(c.Server.Version) == "" {
-		errs = append(errs, "server.version is required")
-	}
+	// server.version is optional
 
 	if strings.TrimSpace(c.Server.Title) == "" {
 		c.Server.Title = c.Server.Name
@@ -176,6 +174,7 @@ func (c *Config) validateTransport() []string {
 	}
 
 	if c.Transport.Type != "http" && c.Transport.Type != "stdio" {
+		errs = append(errs, "transport type")
 		c.Transport.Type = DefaultTransport
 	}
 
@@ -184,10 +183,9 @@ func (c *Config) validateTransport() []string {
 	}
 
 	if c.Transport.HTTPPort < 1 || c.Transport.HTTPPort > 65535 {
-		err := fmt.Sprintf("transport.http_port must be between 1 and 65535 (got %d)", c.Transport.HTTPPort)
-		errs = append(errs, err)
+		errs = append(errs, "port")
 	}
-	return nil
+	return errs
 }
 
 func validateSchemaObject(raw string, label string) error {
