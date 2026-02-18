@@ -11,7 +11,7 @@ import (
 )
 
 func Run() error {
-	fmt.Printf("+-----------------------------+\n| MCPGEN Bootstrap MCP server |\n+-----------------------------+\n\n")
+	fmt.Printf("+---------------------------------------+\n| [ MCPGEN ] Go MCP Server Cookiecutter |\n+---------------------------------------+\n\n")
 
 	cfg, out, shouldTest, err := ui.RunInteractive()
 	if err != nil {

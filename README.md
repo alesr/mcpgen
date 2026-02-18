@@ -1,6 +1,7 @@
 # MCPGEN
+[![codecov](https://codecov.io/gh/alesr/mcpgen/graph/badge.svg?token=pSA7mD0Qn8)](https://codecov.io/gh/alesr/mcpgen)
 
-A cookie cutter for MCP servers.
+A cookiecutter for MCP servers.
 
 It asks a few questions, generates a clean MCP server in Go, runs checks, and leaves you with code you can extend.
 
@@ -62,6 +63,20 @@ Replace the stub logic with your real implementation.
 
 - Default transport is **stdio** (best for local tools).
 - You can switch to HTTP in the setup flow if you want a networked server.
+
+## Screenshots
+
+<div style="display: flex; justify-content: center;">
+    <img src="https://github.com/user-attachments/assets/d572ffc7-aa04-48d4-a047-62f38d0c16d2" width="400" />
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+    <img src="https://github.com/user-attachments/assets/4bb1e652-6a9c-4bd1-9abf-5637bbf2b3f9" width="300" style="margin-bottom: 10px;" />
+    <img src="https://github.com/user-attachments/assets/dab94556-37a0-4adf-b41c-a1ef409d3e2a" width="300" style="margin-bottom: 10px;" />
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+    <img src="https://github.com/user-attachments/assets/874b8fae-a131-41b8-ab90-d382d46ce84d" width="300" style="margin-bottom: 10px;" />
+    <img src="https://github.com/user-attachments/assets/6ea9ecc1-42b8-41a5-972d-1a934c0ec8e9" width="300" style="margin-bottom: 10px;" />
+</div>
 
 ## TODO
 
