@@ -65,10 +65,17 @@ Replace the stub logic with your real implementation.
 
 ## Screenshots
 
-![MCPGEN Screenshot 1](https://github.com/user-attachments/assets/b964dd20-88e3-4d62-9fd2-0045c9197b9b)
-![MCPGEN Screenshot 2](https://github.com/user-attachments/assets/abba7ef7-6ba0-4d55-9741-a8be1afa4144)
-![MCPGEN Screenshot 3](https://github.com/user-attachments/assets/403cfb5c-693f-49ba-89fb-32c5cd182f83)
-![MCPGEN Screenshot 4](https://github.com/user-attachments/assets/b2f265a3-9d36-4525-9bc9-99f9f2ff35fd)
+<div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+    <img src="https://github.com/user-attachments/assets/6ea9ecc1-42b8-41a5-972d-1a934c0ec8e9" width="300" style="margin-bottom: 10px;" />
+    <img src="https://github.com/user-attachments/assets/874b8fae-a131-41b8-ab90-d382d46ce84d" width="300" style="margin-bottom: 10px;" />
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+    <img src="https://github.com/user-attachments/assets/dab94556-37a0-4adf-b41c-a1ef409d3e2a" width="300" style="margin-bottom: 10px;" />
+    <img src="https://github.com/user-attachments/assets/4bb1e652-6a9c-4bd1-9abf-5637bbf2b3f9" width="300" style="margin-bottom: 10px;" />
+</div>
+<div style="display: flex; justify-content: center;">
+    <img src="https://github.com/user-attachments/assets/d572ffc7-aa04-48d4-a047-62f38d0c16d2" width="400" />
+</div>
 
 ## TODO
 
