@@ -75,7 +75,6 @@ Replace the stub logic with your real implementation.
 </div>
 <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
     <img src="https://github.com/user-attachments/assets/874b8fae-a131-41b8-ab90-d382d46ce84d" width="300" style="margin-bottom: 10px;" />
-    <img src="https://github.com/user-attachments/assets/6ea9ecc1-42b8-41a5-972d-1a934c0ec8e9" width="300" style="margin-bottom: 10px;" />
 </div>
 
 ## TODO
