@@ -2,7 +2,6 @@ package config
 
 import (
 	"errors"
-	"strings"
 )
 
 type (
@@ -71,7 +70,11 @@ func (c *Config) Validate() error {
 	errs = append(errs, c.validateTransport()...)
 
 	if len(errs) > 0 {
-		return errors.New(strings.Join(errs, "; "))
+		joined := make([]error, 0, len(errs))
+		for _, err := range errs {
+			joined = append(joined, errors.New(err))
+		}
+		return errors.Join(joined...)
 	}
 	return nil
 }
