@@ -55,13 +55,13 @@ func (g *Generator) validate() error {
 
 func (g *Generator) ensureOutputDirs(serverName string) error {
 	paths := []string{
-		filepath.Join(g.OutDir, "cmd", serverName),
-		filepath.Join(g.OutDir, "internal", "mcpapp"),
-		filepath.Join(g.OutDir, "internal", "mcpapp", "tools"),
-		filepath.Join(g.OutDir, "internal", "mcpapp", "tools", "handlers"),
-		filepath.Join(g.OutDir, "internal", "mcpapp", "prompts"),
-		filepath.Join(g.OutDir, "internal", "mcpapp", "resources"),
-		filepath.Join(g.OutDir, "internal", "mcpapp", "stubs"),
+		g.outPath("cmd", serverName),
+		g.outPath("internal", "mcpapp"),
+		g.outPath("internal", "mcpapp", "tools"),
+		g.outPath("internal", "mcpapp", "tools", "handlers"),
+		g.outPath("internal", "mcpapp", "prompts"),
+		g.outPath("internal", "mcpapp", "resources"),
+		g.outPath("internal", "mcpapp", "stubs"),
 	}
 
 	for _, p := range paths {
@@ -93,7 +93,7 @@ func (g *Generator) writeCoreTemplates(serverName string, data TemplateData) err
 	}
 
 	for _, j := range jobs {
-		fullPath := filepath.Join(g.OutDir, j.dest)
+		fullPath := g.outPath(j.dest)
 		if err := g.writeTemplate(j.src, fullPath, data, j.overwrite); err != nil {
 			return fmt.Errorf("could not write template %s: %w", j.src, err)
 		}
@@ -119,7 +119,7 @@ func (g *Generator) writeOptionalTemplates(data TemplateData) error {
 			continue
 		}
 
-		fullPath := filepath.Join(g.OutDir, j.dest)
+		fullPath := g.outPath(j.dest)
 		if err := g.writeTemplate(j.src, fullPath, data, true); err != nil {
 			return fmt.Errorf("could not write template %s: %w", j.src, err)
 		}
@@ -129,8 +129,8 @@ func (g *Generator) writeOptionalTemplates(data TemplateData) error {
 
 func (g *Generator) cleanupGenerated() error {
 	paths := []string{
-		filepath.Join(g.OutDir, "cmd"),
-		filepath.Join(g.OutDir, "internal", "mcpapp"),
+		g.outPath("cmd"),
+		g.outPath("internal", "mcpapp"),
 	}
 
 	for _, p := range paths {
@@ -147,7 +147,7 @@ func (g *Generator) writeTemplate(name string, path string, data TemplateData, g
 		return err
 	}
 
-	if gofmt {
+	if gofmt && filepath.Ext(path) == ".go" {
 		formatted, err := format.Source(content)
 		if err != nil {
 			return fmt.Errorf("format %s: %w", path, err)
@@ -155,4 +155,11 @@ func (g *Generator) writeTemplate(name string, path string, data TemplateData, g
 		content = formatted
 	}
 	return os.WriteFile(path, content, 0o644)
+}
+
+func (g *Generator) outPath(elem ...string) string {
+	parts := make([]string, 0, len(elem)+1)
+	parts = append(parts, g.OutDir)
+	parts = append(parts, elem...)
+	return filepath.Join(parts...)
 }

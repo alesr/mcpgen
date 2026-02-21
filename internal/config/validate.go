@@ -9,10 +9,10 @@ import (
 	"strings"
 )
 
-func (c *Config) validateServer() []string {
-	errs := make([]string, 0)
+func (c *Config) validateServer() []error {
+	errs := make([]error, 0)
 	if strings.TrimSpace(c.Server.Name) == "" {
-		errs = append(errs, "server name")
+		errs = append(errs, errors.New("server name"))
 	}
 
 	// server.version is optional
@@ -30,24 +30,24 @@ func (c *Config) validateServer() []string {
 	}
 
 	if !isValidModulePath(c.Server.Module) {
-		errs = append(errs, fmt.Sprintf("server.module is not a valid module path: %q", c.Server.Module))
+		errs = append(errs, fmt.Errorf("server.module is not a valid module path: %q", c.Server.Module))
 	}
 	return errs
 }
 
-func (c *Config) validateTool() []string {
-	var errs []string
+func (c *Config) validateTool() []error {
+	var errs []error
 	toolIDs := make(map[string]bool)
 
 	for i := range c.Tools {
 		t := &c.Tools[i]
 		if strings.TrimSpace(t.ID) == "" {
-			errs = append(errs, fmt.Sprintf("tool[%d].id is required", i))
+			errs = append(errs, fmt.Errorf("tool[%d].id is required", i))
 			continue
 		}
 
 		if toolIDs[t.ID] {
-			errs = append(errs, fmt.Sprintf("tool id %q is duplicated", t.ID))
+			errs = append(errs, fmt.Errorf("tool id %q is duplicated", t.ID))
 		}
 
 		toolIDs[t.ID] = true
@@ -64,7 +64,7 @@ func (c *Config) validateTool() []string {
 		}
 
 		if err := validateSchemaObject(t.InputSchema, "tool "+t.ID+" input_schema"); err != nil {
-			errs = append(errs, err.Error())
+			errs = append(errs, err)
 		}
 
 		if t.OutputSchema == "" {
@@ -72,25 +72,25 @@ func (c *Config) validateTool() []string {
 		}
 
 		if err := validateSchemaObject(t.OutputSchema, "tool "+t.ID+" output_schema"); err != nil {
-			errs = append(errs, err.Error())
+			errs = append(errs, err)
 		}
 	}
 	return errs
 }
 
-func (c *Config) validateResource() []string {
-	errs := make([]string, 0)
+func (c *Config) validateResource() []error {
+	errs := make([]error, 0)
 	resourceIDs := make(map[string]bool)
 
 	for i := range c.Resources {
 		r := &c.Resources[i]
 		if strings.TrimSpace(r.ID) == "" {
-			errs = append(errs, fmt.Sprintf("resource[%d].id is required", i))
+			errs = append(errs, fmt.Errorf("resource[%d].id is required", i))
 			continue
 		}
 
 		if resourceIDs[r.ID] {
-			errs = append(errs, fmt.Sprintf("resource id %q is duplicated", r.ID))
+			errs = append(errs, fmt.Errorf("resource id %q is duplicated", r.ID))
 		}
 
 		resourceIDs[r.ID] = true
@@ -103,16 +103,16 @@ func (c *Config) validateResource() []string {
 		}
 
 		if r.URI == "" && r.URITemplate == "" {
-			errs = append(errs, fmt.Sprintf("resource %q must set either uri or uri_template", r.ID))
+			errs = append(errs, fmt.Errorf("resource %q must set either uri or uri_template", r.ID))
 		}
 
 		if r.URI != "" && r.URITemplate != "" {
-			errs = append(errs, fmt.Sprintf("resource %q must set only one of uri or uri_template", r.ID))
+			errs = append(errs, fmt.Errorf("resource %q must set only one of uri or uri_template", r.ID))
 		}
 
 		if r.URI != "" {
 			if err := validateURI(r.URI); err != nil {
-				errs = append(errs, fmt.Sprintf("resource %q uri invalid: %v", r.ID, err))
+				errs = append(errs, fmt.Errorf("resource %q uri invalid: %w", r.ID, err))
 			}
 		}
 
@@ -123,19 +123,19 @@ func (c *Config) validateResource() []string {
 	return errs
 }
 
-func (c *Config) validatePrompt() []string {
-	errs := make([]string, 0)
+func (c *Config) validatePrompt() []error {
+	errs := make([]error, 0)
 	promptIDs := make(map[string]bool)
 
 	for i := range c.Prompts {
 		p := &c.Prompts[i]
 		if strings.TrimSpace(p.ID) == "" {
-			errs = append(errs, fmt.Sprintf("prompt[%d].id is required", i))
+			errs = append(errs, fmt.Errorf("prompt[%d].id is required", i))
 			continue
 		}
 
 		if promptIDs[p.ID] {
-			errs = append(errs, fmt.Sprintf("prompt id %q is duplicated", p.ID))
+			errs = append(errs, fmt.Errorf("prompt id %q is duplicated", p.ID))
 		}
 
 		promptIDs[p.ID] = true
@@ -159,7 +159,7 @@ func (c *Config) validatePrompt() []string {
 			if strings.TrimSpace(arg.Name) == "" {
 				errs = append(
 					errs,
-					fmt.Sprintf("prompt %q argument[%d].name is required", p.ID, j),
+					fmt.Errorf("prompt %q argument[%d].name is required", p.ID, j),
 				)
 			}
 		}
@@ -167,14 +167,14 @@ func (c *Config) validatePrompt() []string {
 	return errs
 }
 
-func (c *Config) validateTransport() []string {
-	errs := make([]string, 0)
+func (c *Config) validateTransport() []error {
+	errs := make([]error, 0)
 	if strings.TrimSpace(c.Transport.Type) == "" {
 		c.Transport.Type = DefaultTransport
 	}
 
 	if c.Transport.Type != "http" && c.Transport.Type != "stdio" {
-		errs = append(errs, "transport type")
+		errs = append(errs, errors.New("transport type"))
 		c.Transport.Type = DefaultTransport
 	}
 
@@ -183,7 +183,7 @@ func (c *Config) validateTransport() []string {
 	}
 
 	if c.Transport.HTTPPort < 1 || c.Transport.HTTPPort > 65535 {
-		errs = append(errs, "port")
+		errs = append(errs, errors.New("port"))
 	}
 	return errs
 }
