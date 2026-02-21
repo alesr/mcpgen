@@ -1,11 +1,10 @@
 # MCPGEN
-[![codecov](https://codecov.io/gh/alesr/mcpgen/graph/badge.svg?token=pSA7mD0Qn8)](https://codecov.io/gh/alesr/mcpgen)
+[![Go](https://img.shields.io/badge/Go-1.25-blue?logo=go&logoColor=white)](https://go.dev)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A cookiecutter for MCP servers.
+A cookiecutter for bootstrapping MCP servers in Go.
 
-It asks a few questions, generates a clean MCP server in Go, runs checks, and leaves you with code you can extend.
-
-> ⚠️ **Note:** This project is under active development. Features, APIs, and configurations may change until the first stable release.
+Answer a few questions → get a clean, tested, inspector-ready MCP server in seconds.
 
 ## Requirements
 
