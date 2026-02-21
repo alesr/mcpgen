@@ -15,17 +15,29 @@ Answer a few questions → get a clean, tested, inspector-ready MCP server in se
 ## Quick start
 
 ```sh
-git clone https://github.com/alesr/mcpgen.git
-
-cd mcpgen
-
-go run .
-
-# or
-make gen
+go install github.com/alesr/mcpgen@latest
+mcpgen
 ```
 
 You’ll get a small interactive flow. Press Enter to accept defaults.
+
+
+## CLI flags
+
+You can also run in non-interactive mode with flags:
+
+```sh
+mcpgen --help
+```
+Inspector checks in flag mode run only when stdin is a TTY (matching the existing non-interactive default of skipping inspector checks).
+
+Examples:
+
+```sh
+mcpgen --name weather --transport stdio
+mcpgen --name weather --transport http --no-inspector
+mcpgen --dry-run --name weather
+```
 
 ## What it generates
 
@@ -65,16 +77,10 @@ Replace the stub logic with your real implementation.
 
 ## Screenshots
 
-<div style="display: flex; justify-content: center;">
-    <img src="https://github.com/user-attachments/assets/d572ffc7-aa04-48d4-a047-62f38d0c16d2" width="400" />
-</div>
-<div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
-    <img src="https://github.com/user-attachments/assets/4bb1e652-6a9c-4bd1-9abf-5637bbf2b3f9" width="300" style="margin-bottom: 10px;" />
-    <img src="https://github.com/user-attachments/assets/dab94556-37a0-4adf-b41c-a1ef409d3e2a" width="300" style="margin-bottom: 10px;" />
-</div>
-<div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
-    <img src="https://github.com/user-attachments/assets/874b8fae-a131-41b8-ab90-d382d46ce84d" width="300" style="margin-bottom: 10px;" />
-</div>
+<img src="https://github.com/user-attachments/assets/d572ffc7-aa04-48d4-a047-62f38d0c16d2" width="400" />
+<img src="https://github.com/user-attachments/assets/4bb1e652-6a9c-4bd1-9abf-5637bbf2b3f9" width="300" style="margin-bottom: 10px;" />
+<img src="https://github.com/user-attachments/assets/dab94556-37a0-4adf-b41c-a1ef409d3e2a" width="300" style="margin-bottom: 10px;" />
+<img src="https://github.com/user-attachments/assets/874b8fae-a131-41b8-ab90-d382d46ce84d" width="300" style="margin-bottom: 10px;" />
 
 ## TODO
 
