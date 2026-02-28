@@ -12,8 +12,9 @@ import (
 )
 
 var (
-	errConfigIsNil = errors.New("config is nil")
-	errOutDirEmpty = errors.New("out dir is required")
+	errConfigIsNil  = errors.New("config is nil")
+	errOutDirEmpty  = errors.New("out dir is required")
+	errOutDirUnsafe = errors.New("out dir must not be current directory or filesystem root")
 )
 
 type Generator struct {
@@ -50,7 +51,38 @@ func (g *Generator) validate() error {
 	if g.OutDir == "" {
 		return errOutDirEmpty
 	}
+	unsafeOutDir, err := isUnsafeOutDir(g.OutDir)
+	if err != nil {
+		return fmt.Errorf("%w: %v", errOutDirUnsafe, err)
+	}
+	if unsafeOutDir {
+		return errOutDirUnsafe
+	}
 	return nil
+}
+
+// isUnsafeOutDir blocks locations that would make cleanupGenerated() dangerous,
+// since cleanup removes "cmd" and "internal/mcpapp" under OutDir via RemoveAll.
+func isUnsafeOutDir(outDir string) (bool, error) {
+	cleaned := filepath.Clean(outDir)
+	if cleaned == "." {
+		return true, nil
+	}
+
+	absOutDir, err := filepath.Abs(cleaned)
+	if err != nil {
+		return true, fmt.Errorf("could not resolve absolute out dir: %w", err)
+	}
+
+	if absOutDir == filepath.Dir(absOutDir) {
+		return true, nil
+	}
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		return true, fmt.Errorf("could not resolve current working directory: %w", err)
+	}
+	return absOutDir == cwd, nil
 }
 
 func (g *Generator) ensureOutputDirs(serverName string) error {

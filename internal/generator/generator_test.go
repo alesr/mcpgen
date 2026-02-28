@@ -2,14 +2,20 @@ package generator
 
 import (
 	"errors"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/alesr/mcpgen/internal/config"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGenerator_validate(t *testing.T) {
 	t.Parallel()
+
+	cwd, err := os.Getwd()
+	require.NoError(t, err)
 
 	cfg := &config.Config{
 		Server: config.ServerConfig{
@@ -42,6 +48,24 @@ func TestGenerator_validate(t *testing.T) {
 			givenCfg:    cfg,
 			givenOutDir: "",
 			expected:    errOutDirEmpty,
+		},
+		{
+			name:        "out dir is current directory",
+			givenCfg:    cfg,
+			givenOutDir: ".",
+			expected:    errOutDirUnsafe,
+		},
+		{
+			name:        "out dir is absolute current directory",
+			givenCfg:    cfg,
+			givenOutDir: cwd,
+			expected:    errOutDirUnsafe,
+		},
+		{
+			name:        "out dir is filesystem root",
+			givenCfg:    cfg,
+			givenOutDir: string(filepath.Separator),
+			expected:    errOutDirUnsafe,
 		},
 	}
 
