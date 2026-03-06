@@ -10,6 +10,8 @@ func TestConfig_Validate(t *testing.T) {
 	t.Parallel()
 
 	t.Run("valid config returns no error", func(t *testing.T) {
+		t.Parallel()
+
 		cfg := &Config{
 			Server: ServerConfig{
 				Name:    "test-server",
@@ -27,6 +29,8 @@ func TestConfig_Validate(t *testing.T) {
 	})
 
 	t.Run("accumulates multiple errors", func(t *testing.T) {
+		t.Parallel()
+
 		cfg := &Config{
 			Server: ServerConfig{
 				Name: "",
@@ -39,11 +43,9 @@ func TestConfig_Validate(t *testing.T) {
 
 		err := cfg.Validate()
 		assert.Error(t, err)
-
-		// TODO(alesr): use sentinels
-		assert.Contains(t, err.Error(), "server name")
-		assert.Contains(t, err.Error(), "transport type")
-		assert.Contains(t, err.Error(), "port")
+		assert.ErrorIs(t, err, ErrServerNameRequired)
+		assert.ErrorIs(t, err, ErrTransportTypeInvalid)
+		assert.ErrorIs(t, err, ErrTransportPortInvalid)
 	})
 }
 
@@ -52,18 +54,23 @@ func TestValidateTool(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		tools     []ToolConfig
+		tool      *ToolConfig
 		errsCount int
 	}{
 		{
 			"valid tool",
-			[]ToolConfig{{ID: "my-tool"}},
+			&ToolConfig{ID: "my-tool"},
 			0,
 		},
 		{
 			"missing tool ID",
-			[]ToolConfig{{ID: ""}},
+			&ToolConfig{ID: ""},
 			1,
+		},
+		{
+			"no tool",
+			nil,
+			0,
 		},
 	}
 
@@ -71,7 +78,7 @@ func TestValidateTool(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			cfg := &Config{Tools: tt.tools}
+			cfg := &Config{Tool: tt.tool}
 
 			errs := cfg.validateTool()
 			assert.Len(t, errs, tt.errsCount)

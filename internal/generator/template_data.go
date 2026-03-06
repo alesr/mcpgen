@@ -10,16 +10,17 @@ import (
 )
 
 type TemplateData struct {
-	Module            string
-	ServerName        string
-	ServerDisplayName string
-	ServerTitle       string
-	ServerVersion     string
-	Instructions      string
-	Transport         TransportData
-	Tools             []ToolData
-	Resources         []ResourceData
-	Prompts           []PromptData
+	Module             string
+	ServerName         string
+	ServerDisplayName  string
+	ServerTitle        string
+	ServerVersion      string
+	Instructions       string
+	Transport          TransportData
+	Tools              []ToolData
+	Resources          []ResourceData
+	Prompts            []PromptData
+	ElicitationEnabled bool
 }
 
 type TransportData struct {
@@ -78,9 +79,11 @@ func buildTemplateData(cfg *config.Config, serverName string) TemplateData {
 			Type:     cfg.Transport.Type,
 			HTTPPort: cfg.Transport.HTTPPort,
 		},
+		ElicitationEnabled: cfg.Elicitation.Enabled,
 	}
 
-	for _, tool := range cfg.Tools {
+	if cfg.Tool != nil {
+		tool := *cfg.Tool
 		data.Tools = append(data.Tools, ToolData{
 			ID:           tool.ID,
 			GoName:       utils.GoIdent(tool.ID),
@@ -91,7 +94,8 @@ func buildTemplateData(cfg *config.Config, serverName string) TemplateData {
 		})
 	}
 
-	for _, res := range cfg.Resources {
+	if cfg.Resource != nil {
+		res := *cfg.Resource
 		testURI := res.URI
 		if res.URITemplate != "" {
 			testURI = strings.ReplaceAll(res.URITemplate, "{id}", res.ID)
@@ -110,7 +114,8 @@ func buildTemplateData(cfg *config.Config, serverName string) TemplateData {
 		})
 	}
 
-	for _, prompt := range cfg.Prompts {
+	if cfg.Prompt != nil {
+		prompt := *cfg.Prompt
 		p := PromptData{
 			ID:          prompt.ID,
 			GoName:      utils.GoIdent(prompt.ID),

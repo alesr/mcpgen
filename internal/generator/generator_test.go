@@ -2,8 +2,10 @@ package generator
 
 import (
 	"errors"
+	"go/format"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/alesr/mcpgen/internal/config"
@@ -83,4 +85,27 @@ func TestGenerator_validate(t *testing.T) {
 			assert.True(t, errors.Is(err, tt.expected))
 		})
 	}
+}
+
+func TestRenderTemplate_HandlersWithElicitation(t *testing.T) {
+	t.Parallel()
+
+	data := TemplateData{
+		Module:             "example.com/test",
+		ElicitationEnabled: true,
+		Tools: []ToolData{{
+			ID:     "greet",
+			GoName: "Greet",
+		}},
+	}
+
+	content, err := RenderTemplate("handlers.go.gotmpl", data)
+	require.NoError(t, err)
+
+	_, err = format.Source(content)
+	require.NoError(t, err)
+
+	out := string(content)
+	assert.True(t, strings.Contains(out, "req.Session.Elicit"))
+	assert.True(t, strings.Contains(out, "ToolNameFallbackGreet"))
 }

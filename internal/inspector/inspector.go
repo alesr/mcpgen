@@ -22,15 +22,15 @@ func RunTest(outDir string, cfg *config.Config) error {
 	serverName := utils.DefaultServerName(cfg.Server.Name)
 	methods := make([]inspectorCall, 0)
 
-	if len(cfg.Tools) > 0 {
+	if cfg.Tool != nil {
 		methods = append(methods, inspectorCall{method: "tools/list"})
 	}
 
-	if len(cfg.Resources) > 0 {
+	if cfg.Resource != nil {
 		methods = append(methods, inspectorCall{method: "resources/list"})
 	}
 
-	if len(cfg.Prompts) > 0 {
+	if cfg.Prompt != nil {
 		methods = append(methods, inspectorCall{method: "prompts/list"})
 	}
 

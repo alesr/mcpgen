@@ -32,10 +32,39 @@ func (h *Handlers) Noop() {}
 {{- range .Tools }}
 // Handle{{ .GoName }} returns a stub response for {{ .ID }}.
 func (h *Handlers) Handle{{ .GoName }}(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	name := ToolNameFallback{{ .GoName }}
+	if req != nil && req.Params != nil && req.Params.Name != "" {
+		name = req.Params.Name
+	}
+{{- if $.ElicitationEnabled }}
+	if req != nil && req.Session != nil {
+		res, err := req.Session.Elicit(ctx, &mcp.ElicitParams{
+			Message: "Provide optional context before running this tool.",
+			RequestedSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"note": map[string]any{
+						"type":        "string",
+						"description": "Optional note for tool execution.",
+					},
+				},
+			},
+		})
+		if err != nil {
+			h.logger.Debug("elicitation unavailable; continuing", "tool", name, "error", err)
+		} else {
+			h.logger.Debug("elicitation completed", "tool", name, "action", res.Action)
+		}
+	}
+{{- else }}
 	_ = h
 	_ = ctx
-	return stubs.ToolResult(req.Params.Name), nil
+{{- end }}
+	return stubs.ToolResult(name), nil
 }
+
+// ToolNameFallback{{ .GoName }} is the default name used when request metadata is absent.
+const ToolNameFallback{{ .GoName }} = {{ quote .ID }}
 
 {{- end }}
 {{- end }}
