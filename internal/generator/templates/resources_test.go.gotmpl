@@ -21,7 +21,6 @@ func TestResources(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			res, err := tt.handler(context.Background(), &mcp.ReadResourceRequest{Params: &mcp.ReadResourceParams{URI: tt.uri}})

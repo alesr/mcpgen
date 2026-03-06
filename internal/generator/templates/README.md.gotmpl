@@ -2,6 +2,11 @@
 
 Generated MCP server.
 
+{{- if .ElicitationEnabled }}
+This server includes an elicitation example in generated tool handlers.
+Elicitation works when the connected MCP client supports it.
+{{- end }}
+
 ## Run
 
 ```sh

@@ -8,4 +8,5 @@ var (
 	ErrTransportTypeInvalid = errors.New("transport type is invalid")
 	ErrTransportPortInvalid = errors.New("transport port is out of range")
 	ErrURIMissingScheme     = errors.New("uri is missing scheme")
+	ErrElicitationNeedsTool = errors.New("elicitation requires at least one tool")
 )

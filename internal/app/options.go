@@ -12,15 +12,16 @@ import (
 )
 
 type runOptions struct {
-	Name          string
-	Transport     string
-	WithTools     bool
-	WithPrompts   bool
-	WithResources bool
-	NoInspector   bool
-	DryRun        bool
-	ShowHelp      bool
-	HasCLIInput   bool
+	Name            string
+	Transport       string
+	WithTools       bool
+	WithPrompts     bool
+	WithResources   bool
+	WithElicitation bool
+	NoInspector     bool
+	DryRun          bool
+	ShowHelp        bool
+	HasCLIInput     bool
 }
 
 type ConfigRun struct {
@@ -35,9 +36,10 @@ func parseRunOptions(args []string, out io.Writer) (runOptions, error) {
 	fs.SetOutput(out)
 	fs.StringVar(&opts.Name, "name", config.DefaultServerName, "Server name")
 	fs.StringVar(&opts.Transport, "transport", config.DefaultTransport, "Transport: stdio|http")
-	fs.BoolVar(&opts.WithTools, "with-tools", true, "Generate tool stubs")
-	fs.BoolVar(&opts.WithPrompts, "with-prompts", true, "Generate prompt stubs")
-	fs.BoolVar(&opts.WithResources, "with-resources", true, "Generate resource stubs")
+	fs.BoolVar(&opts.WithTools, "with-tools", true, "Generate tool stub")
+	fs.BoolVar(&opts.WithPrompts, "with-prompts", true, "Generate prompt stub")
+	fs.BoolVar(&opts.WithResources, "with-resources", true, "Generate resource stub")
+	fs.BoolVar(&opts.WithElicitation, "with-elicitation", false, "Generate elicitation example in tool handlers")
 	fs.BoolVar(&opts.NoInspector, "no-inspector", false, "Skip inspector checks")
 	fs.BoolVar(&opts.DryRun, "dry-run", false, "Print plan without generating files")
 
@@ -57,6 +59,7 @@ func parseRunOptions(args []string, out io.Writer) (runOptions, error) {
 		fmt.Fprintln(out, "Notes:")
 		fmt.Fprintln(out, "  - With no flags on a TTY, mcpgen starts interactive mode.")
 		fmt.Fprintln(out, "  - --with-tools, --with-prompts, and --with-resources default to true.")
+		fmt.Fprintln(out, "  - --with-elicitation requires --with-tools=true.")
 		fmt.Fprintln(out, "  - Inspector checks run only when stdin is a TTY (or in interactive mode).")
 	}
 
@@ -87,10 +90,17 @@ func parseRunOptions(args []string, out io.Writer) (runOptions, error) {
 		return opts, fmt.Errorf("invalid --transport %q (expected stdio or http)", opts.Transport)
 	}
 
+	if opts.WithElicitation && !opts.WithTools {
+		return opts, errors.New("--with-elicitation requires --with-tools=true")
+	}
 	return opts, nil
 }
 
 func runWithOptions(opts runOptions, canRunInspector bool) (*ConfigRun, bool, bool, error) {
+	if opts.WithElicitation && !opts.WithTools {
+		return nil, false, false, errors.New("--with-elicitation requires --with-tools=true")
+	}
+
 	cfg, outDir := scaffold.DefaultConfig(
 		config.DefaultOutputDir,
 		opts.Transport,
@@ -98,6 +108,7 @@ func runWithOptions(opts runOptions, canRunInspector bool) (*ConfigRun, bool, bo
 		opts.WithTools,
 		opts.WithResources,
 		opts.WithPrompts,
+		opts.WithElicitation,
 	)
 
 	cfg.Server.Name = opts.Name
