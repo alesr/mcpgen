@@ -52,14 +52,19 @@ type (
 		Description string `toml:"description"`
 		Required    bool   `toml:"required"`
 	}
+
+	ElicitationConfig struct {
+		Enabled bool `toml:"enabled"`
+	}
 )
 
 type Config struct {
-	Server    ServerConfig     `toml:"server"`
-	Tools     []ToolConfig     `toml:"tool"`
-	Resources []ResourceConfig `toml:"resource"`
-	Prompts   []PromptConfig   `toml:"prompt"`
-	Transport TransportConfig  `toml:"transport"`
+	Server      ServerConfig      `toml:"server"`
+	Tools       []ToolConfig      `toml:"tool"`
+	Resources   []ResourceConfig  `toml:"resource"`
+	Prompts     []PromptConfig    `toml:"prompt"`
+	Elicitation ElicitationConfig `toml:"elicitation"`
+	Transport   TransportConfig   `toml:"transport"`
 }
 
 func (c *Config) Validate() error {

@@ -32,12 +32,12 @@ func TestDefaultModulePath(t *testing.T) {
 		{
 			"empty input fallback",
 			"",
-			"example.com/mcp-server",
+			DefaultServerModule,
 		},
 		{
 			"only invalid characters",
 			"!!!",
-			"example.com/mcp-server",
+			DefaultServerModule,
 		},
 	}
 
@@ -53,47 +53,108 @@ func TestDefaultModulePath(t *testing.T) {
 func TestDefaultToolTitlesAndDescriptions(t *testing.T) {
 	t.Parallel()
 
-	t.Run("greet stub overrides", func(t *testing.T) {
-		id := "greet"
-		assert.Equal(t, "Greet", defaultToolTitle(id))
-		assert.Contains(t, defaultToolDescription(id), "Greets a user")
-	})
+	tests := []struct {
+		name            string
+		id              string
+		expectedTitle   string
+		expectedDesc    string
+		containsOnly    bool
+		expectedSnippet string
+	}{
+		{
+			name:            "greet stub overrides",
+			id:              "greet",
+			expectedTitle:   "Greet",
+			containsOnly:    true,
+			expectedSnippet: "Greets a user",
+		},
+		{
+			name:          "generic tool fallback",
+			id:            "foo-bar",
+			expectedTitle: "Foo Bar",
+			expectedDesc:  "Tool stub for foo-bar.",
+		},
+	}
 
-	t.Run("generic tool fallback", func(t *testing.T) {
-		id := "foo-bar"
-		assert.Equal(t, "Foo Bar", defaultToolTitle(id))
-		assert.Equal(t, "Tool stub for foo-bar.", defaultToolDescription(id))
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.Equal(t, tt.expectedTitle, defaultToolTitle(tt.id))
+
+			desc := defaultToolDescription(tt.id)
+			if tt.containsOnly {
+				assert.Contains(t, desc, tt.expectedSnippet)
+				return
+			}
+
+			assert.Equal(t, tt.expectedDesc, desc)
+		})
+	}
 }
 
 func TestDefaultResourceLogic(t *testing.T) {
 	t.Parallel()
 
-	t.Run("readme stub overrides", func(t *testing.T) {
-		id := "readme"
-		assert.Equal(t, "Readme", defaultResourceTitle(id))
-		assert.Equal(t, DefaultResourceText, defaultResourceTextForID(id))
-	})
+	tests := []struct {
+		name          string
+		id            string
+		expectedTitle string
+		expectedText  string
+	}{
+		{
+			name:          "readme stub overrides",
+			id:            "readme",
+			expectedTitle: "Readme",
+			expectedText:  DefaultResourceText,
+		},
+		{
+			name:          "generic resource fallback",
+			id:            "config-file",
+			expectedTitle: "Config File",
+			expectedText:  "This is the config-file stub.",
+		},
+	}
 
-	t.Run("generic resource fallback", func(t *testing.T) {
-		id := "config-file"
-		assert.Equal(t, "Config File", defaultResourceTitle(id))
-		assert.Equal(t, "This is the config-file stub.", defaultResourceTextForID(id))
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.Equal(t, tt.expectedTitle, defaultResourceTitle(tt.id))
+			assert.Equal(t, tt.expectedText, defaultResourceTextForID(tt.id))
+		})
+	}
 }
 
 func TestDefaultPromptLogic(t *testing.T) {
 	t.Parallel()
 
-	t.Run("welcome stub overrides", func(t *testing.T) {
-		id := "welcome"
-		assert.Equal(t, "Welcome", defaultPromptTitle(id))
-		assert.Equal(t, DefaultPromptTemplate, defaultPromptTemplateForID(id))
-	})
+	tests := []struct {
+		name             string
+		id               string
+		expectedTitle    string
+		expectedTemplate string
+	}{
+		{
+			name:             "welcome stub overrides",
+			id:               "welcome",
+			expectedTitle:    "Welcome",
+			expectedTemplate: DefaultPromptTemplate,
+		},
+		{
+			name:             "generic prompt fallback",
+			id:               "onboarding",
+			expectedTitle:    "Onboarding",
+			expectedTemplate: "Prompt onboarding stub",
+		},
+	}
 
-	t.Run("generic prompt fallback", func(t *testing.T) {
-		id := "onboarding"
-		assert.Equal(t, "Onboarding", defaultPromptTitle(id))
-		assert.Equal(t, "Prompt onboarding stub", defaultPromptTemplateForID(id))
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.Equal(t, tt.expectedTitle, defaultPromptTitle(tt.id))
+			assert.Equal(t, tt.expectedTemplate, defaultPromptTemplateForID(tt.id))
+		})
+	}
 }

@@ -2,35 +2,35 @@ package config
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/url"
-	"slices"
 	"strings"
+
+	"golang.org/x/mod/module"
 )
 
 func (c *Config) validateServer() []error {
 	errs := make([]error, 0)
 	if strings.TrimSpace(c.Server.Name) == "" {
-		errs = append(errs, errors.New("server name"))
+		errs = append(errs, ErrServerNameRequired)
 	}
 
 	// server.version is optional
 
 	if strings.TrimSpace(c.Server.Title) == "" {
-		c.Server.Title = c.Server.Name
+		c.Server.Title = DefaultServerTitle
 	}
 
 	if strings.TrimSpace(c.Server.Description) == "" {
-		c.Server.Description = "Generated MCP server."
+		c.Server.Description = DefaultServerDescription
 	}
 
 	if c.Server.Module == "" {
 		c.Server.Module = defaultModulePath(c.Server.Name)
 	}
 
-	if !isValidModulePath(c.Server.Module) {
-		errs = append(errs, fmt.Errorf("server.module is not a valid module path: %q", c.Server.Module))
+	if err := module.CheckPath(c.Server.Module); err != nil {
+		errs = append(errs, fmt.Errorf("%w: %q", ErrServerModuleInvalid, c.Server.Module))
 	}
 	return errs
 }
@@ -60,7 +60,7 @@ func (c *Config) validateTool() []error {
 		}
 
 		if t.InputSchema == "" {
-			t.InputSchema = `{"type":"object"}`
+			t.InputSchema = defaultJSONSchemaObject
 		}
 
 		if err := validateSchemaObject(t.InputSchema, "tool "+t.ID+" input_schema"); err != nil {
@@ -68,7 +68,7 @@ func (c *Config) validateTool() []error {
 		}
 
 		if t.OutputSchema == "" {
-			t.OutputSchema = `{"type":"object"}`
+			t.OutputSchema = defaultJSONSchemaObject
 		}
 
 		if err := validateSchemaObject(t.OutputSchema, "tool "+t.ID+" output_schema"); err != nil {
@@ -152,7 +152,7 @@ func (c *Config) validatePrompt() []error {
 		}
 
 		if strings.TrimSpace(p.Role) == "" {
-			p.Role = "user"
+			p.Role = defaultPromptRole
 		}
 
 		for j, arg := range p.Arguments {
@@ -174,7 +174,7 @@ func (c *Config) validateTransport() []error {
 	}
 
 	if c.Transport.Type != "http" && c.Transport.Type != "stdio" {
-		errs = append(errs, errors.New("transport type"))
+		errs = append(errs, fmt.Errorf("%w: %q", ErrTransportTypeInvalid, c.Transport.Type))
 		c.Transport.Type = DefaultTransport
 	}
 
@@ -183,7 +183,7 @@ func (c *Config) validateTransport() []error {
 	}
 
 	if c.Transport.HTTPPort < 1 || c.Transport.HTTPPort > 65535 {
-		errs = append(errs, errors.New("port"))
+		errs = append(errs, fmt.Errorf("%w: %d", ErrTransportPortInvalid, c.Transport.HTTPPort))
 	}
 	return errs
 }
@@ -206,22 +206,7 @@ func validateURI(raw string) error {
 		return err
 	}
 	if u.Scheme == "" {
-		return errors.New("missing scheme")
+		return ErrURIMissingScheme
 	}
 	return nil
-}
-
-func isValidModulePath(path string) bool {
-	if strings.TrimSpace(path) == "" {
-		return false
-	}
-
-	parts := strings.Split(path, "/")
-	if len(parts) < 2 {
-		return false
-	}
-
-	return !slices.ContainsFunc(parts, func(p string) bool {
-		return p == "" || strings.Contains(p, " ")
-	})
 }
