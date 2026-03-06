@@ -7,6 +7,7 @@ require (
 	github.com/charmbracelet/huh v0.8.0
 	github.com/charmbracelet/x/term v0.2.2
 	github.com/stretchr/testify v1.11.1
+	golang.org/x/mod v0.21.0
 	golang.org/x/text v0.23.0
 )
 
