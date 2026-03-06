@@ -85,16 +85,16 @@ func TestValidateResource_DefaultsAndURISentinel(t *testing.T) {
 		cfg := &Config{
 			Server:    ServerConfig{Name: "weather", Module: "example.com/weather"},
 			Transport: TransportConfig{Type: "stdio", HTTPPort: DefaultHTTPPort},
-			Resources: []ResourceConfig{{ID: DefaultResourceID, URI: "file://readme"}},
+			Resource:  &ResourceConfig{ID: DefaultResourceID, URI: "file://readme"},
 		}
 
 		err := cfg.Validate()
 		require.NoError(t, err)
-		require.Len(t, cfg.Resources, 1)
 
-		assert.Equal(t, "Readme", cfg.Resources[0].Title)
-		assert.Equal(t, defaultReadmeDescription, cfg.Resources[0].Description)
-		assert.Equal(t, DefaultResourceText, cfg.Resources[0].Text)
+		require.NotNil(t, cfg.Resource)
+		assert.Equal(t, "Readme", cfg.Resource.Title)
+		assert.Equal(t, defaultReadmeDescription, cfg.Resource.Description)
+		assert.Equal(t, DefaultResourceText, cfg.Resource.Text)
 	})
 
 	t.Run("uri without scheme returns sentinel", func(t *testing.T) {
@@ -103,7 +103,7 @@ func TestValidateResource_DefaultsAndURISentinel(t *testing.T) {
 		cfg := &Config{
 			Server:    ServerConfig{Name: "weather", Module: "example.com/weather"},
 			Transport: TransportConfig{Type: "stdio", HTTPPort: DefaultHTTPPort},
-			Resources: []ResourceConfig{{ID: "docs", URI: "relative/path"}},
+			Resource:  &ResourceConfig{ID: "docs", URI: "relative/path"},
 		}
 
 		err := cfg.Validate()
@@ -118,43 +118,52 @@ func TestValidatePrompt_DefaultsAndArgumentValidation(t *testing.T) {
 	cfg := &Config{
 		Server:    ServerConfig{Name: "weather", Module: "example.com/weather"},
 		Transport: TransportConfig{Type: "stdio", HTTPPort: DefaultHTTPPort},
-		Prompts: []PromptConfig{{
+		Prompt: &PromptConfig{
 			ID:        "onboarding",
 			Arguments: []PromptArgumentConfig{{Name: ""}},
-		}},
-	}
-
-	err := cfg.Validate()
-	require.Error(t, err)
-
-	assert.Equal(t, "Onboarding", cfg.Prompts[0].Title)
-	assert.Equal(t, "Prompt stub for onboarding.", cfg.Prompts[0].Description)
-	assert.Equal(t, "Prompt onboarding stub", cfg.Prompts[0].Template)
-	assert.Equal(t, defaultPromptRole, cfg.Prompts[0].Role)
-	assert.Contains(t, err.Error(), "argument[0].name is required")
-}
-
-func TestValidateTool_DefaultSchemasAndDuplicateIDs(t *testing.T) {
-	t.Parallel()
-
-	cfg := &Config{
-		Server:    ServerConfig{Name: "weather", Module: "example.com/weather"},
-		Transport: TransportConfig{Type: "stdio", HTTPPort: DefaultHTTPPort},
-		Tools: []ToolConfig{
-			{ID: "search"},
-			{ID: "search"},
 		},
 	}
 
 	err := cfg.Validate()
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "duplicated")
 
-	require.Len(t, cfg.Tools, 2)
-	assert.Equal(t, defaultJSONSchemaObject, cfg.Tools[0].InputSchema)
-	assert.Equal(t, defaultJSONSchemaObject, cfg.Tools[0].OutputSchema)
-	assert.Equal(t, defaultJSONSchemaObject, cfg.Tools[1].InputSchema)
-	assert.Equal(t, defaultJSONSchemaObject, cfg.Tools[1].OutputSchema)
+	require.NotNil(t, cfg.Prompt)
+	assert.Equal(t, "Onboarding", cfg.Prompt.Title)
+	assert.Equal(t, "Prompt stub for onboarding.", cfg.Prompt.Description)
+	assert.Equal(t, "Prompt onboarding stub", cfg.Prompt.Template)
+	assert.Equal(t, defaultPromptRole, cfg.Prompt.Role)
+	assert.Contains(t, err.Error(), "argument[0].name is required")
+}
+
+func TestValidateElicitation_RequiresTool(t *testing.T) {
+	t.Parallel()
+
+	cfg := &Config{
+		Server:      ServerConfig{Name: "weather", Module: "example.com/weather"},
+		Transport:   TransportConfig{Type: "stdio", HTTPPort: DefaultHTTPPort},
+		Elicitation: ElicitationConfig{Enabled: true},
+	}
+
+	err := cfg.Validate()
+	require.Error(t, err)
+	assert.ErrorIs(t, err, ErrElicitationNeedsTool)
+}
+
+func TestValidateTool_DefaultSchemas(t *testing.T) {
+	t.Parallel()
+
+	cfg := &Config{
+		Server:    ServerConfig{Name: "weather", Module: "example.com/weather"},
+		Transport: TransportConfig{Type: "stdio", HTTPPort: DefaultHTTPPort},
+		Tool:      &ToolConfig{ID: "search"},
+	}
+
+	err := cfg.Validate()
+	require.NoError(t, err)
+
+	require.NotNil(t, cfg.Tool)
+	assert.Equal(t, defaultJSONSchemaObject, cfg.Tool.InputSchema)
+	assert.Equal(t, defaultJSONSchemaObject, cfg.Tool.OutputSchema)
 }
 
 func TestValidate_AccumulatesSentinelErrors(t *testing.T) {
@@ -166,7 +175,7 @@ func TestValidate_AccumulatesSentinelErrors(t *testing.T) {
 			Module: "invalid module",
 		},
 		Transport: TransportConfig{Type: "tcp", HTTPPort: 99999},
-		Resources: []ResourceConfig{{ID: "docs", URI: "docs/path"}},
+		Resource:  &ResourceConfig{ID: "docs", URI: "docs/path"},
 	}
 
 	err := cfg.Validate()

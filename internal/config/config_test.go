@@ -54,18 +54,23 @@ func TestValidateTool(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		tools     []ToolConfig
+		tool      *ToolConfig
 		errsCount int
 	}{
 		{
 			"valid tool",
-			[]ToolConfig{{ID: "my-tool"}},
+			&ToolConfig{ID: "my-tool"},
 			0,
 		},
 		{
 			"missing tool ID",
-			[]ToolConfig{{ID: ""}},
+			&ToolConfig{ID: ""},
 			1,
+		},
+		{
+			"no tool",
+			nil,
+			0,
 		},
 	}
 
@@ -73,7 +78,7 @@ func TestValidateTool(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			cfg := &Config{Tools: tt.tools}
+			cfg := &Config{Tool: tt.tool}
 
 			errs := cfg.validateTool()
 			assert.Len(t, errs, tt.errsCount)

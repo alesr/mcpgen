@@ -60,9 +60,9 @@ type (
 
 type Config struct {
 	Server      ServerConfig      `toml:"server"`
-	Tools       []ToolConfig      `toml:"tool"`
-	Resources   []ResourceConfig  `toml:"resource"`
-	Prompts     []PromptConfig    `toml:"prompt"`
+	Tool        *ToolConfig       `toml:"tool"`
+	Resource    *ResourceConfig   `toml:"resource"`
+	Prompt      *PromptConfig     `toml:"prompt"`
 	Elicitation ElicitationConfig `toml:"elicitation"`
 	Transport   TransportConfig   `toml:"transport"`
 }
@@ -72,6 +72,7 @@ func (c *Config) Validate() error {
 	errs = append(errs, c.validateTool()...)
 	errs = append(errs, c.validateResource()...)
 	errs = append(errs, c.validatePrompt()...)
+	errs = append(errs, c.validateElicitation()...)
 	errs = append(errs, c.validateTransport()...)
 
 	if len(errs) > 0 {
