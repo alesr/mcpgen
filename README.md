@@ -1,4 +1,5 @@
 # MCPGEN
+[![codecov](https://codecov.io/gh/alesr/mcpgen/graph/badge.svg?token=pSA7mD0Qn8)](https://codecov.io/gh/alesr/mcpgen)
 [![Go](https://img.shields.io/badge/Go-1.25-blue?logo=go&logoColor=white)](https://go.dev)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
