@@ -30,9 +30,10 @@ type ConfigRun struct {
 }
 
 func parseRunOptions(args []string, out io.Writer) (runOptions, error) {
-	opts := runOptions{}
+	var opts runOptions
 
 	fs := flag.NewFlagSet("mcpgen", flag.ContinueOnError)
+
 	fs.SetOutput(out)
 	fs.StringVar(&opts.Name, "name", config.DefaultServerName, "Server name")
 	fs.StringVar(&opts.Transport, "transport", config.DefaultTransport, "Transport: stdio|http")
@@ -44,23 +45,25 @@ func parseRunOptions(args []string, out io.Writer) (runOptions, error) {
 	fs.BoolVar(&opts.DryRun, "dry-run", false, "Print plan without generating files")
 
 	fs.Usage = func() {
-		fmt.Fprintln(out, "Usage: mcpgen [flags]")
-		fmt.Fprintln(out)
-		fmt.Fprintln(out, "Generate a new Go MCP server interactively or from flags.")
-		fmt.Fprintln(out)
-		fmt.Fprintln(out, "Flags:")
+		_, _ = io.WriteString(out, `Usage: mcpgen [flags]
+
+Generate a new Go MCP server interactively or from flags.
+
+Flags:
+`)
 		fs.PrintDefaults()
-		fmt.Fprintln(out)
-		fmt.Fprintln(out, "Examples:")
-		fmt.Fprintln(out, "  mcpgen --name weather --transport stdio")
-		fmt.Fprintln(out, "  mcpgen --name weather --transport http --no-inspector")
-		fmt.Fprintln(out, "  mcpgen --dry-run --name weather")
-		fmt.Fprintln(out)
-		fmt.Fprintln(out, "Notes:")
-		fmt.Fprintln(out, "  - With no flags on a TTY, mcpgen starts interactive mode.")
-		fmt.Fprintln(out, "  - --with-tools, --with-prompts, and --with-resources default to true.")
-		fmt.Fprintln(out, "  - --with-elicitation requires --with-tools=true.")
-		fmt.Fprintln(out, "  - Inspector checks run only when stdin is a TTY (or in interactive mode).")
+		_, _ = io.WriteString(out, `
+Examples:
+  mcpgen --name weather --transport stdio
+  mcpgen --name weather --transport http --no-inspector
+  mcpgen --dry-run --name weather
+
+Notes:
+  - With no flags on a TTY, mcpgen starts interactive mode.
+  - --with-tools, --with-prompts, and --with-resources default to true.
+  - --with-elicitation requires --with-tools=true.
+  - Inspector checks run only when stdin is a TTY (or in interactive mode).
+`)
 	}
 
 	if err := fs.Parse(args); err != nil {
