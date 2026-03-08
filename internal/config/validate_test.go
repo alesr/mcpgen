@@ -135,20 +135,6 @@ func TestValidatePrompt_DefaultsAndArgumentValidation(t *testing.T) {
 	assert.Contains(t, err.Error(), "argument[0].name is required")
 }
 
-func TestValidateElicitation_RequiresTool(t *testing.T) {
-	t.Parallel()
-
-	cfg := &Config{
-		Server:      ServerConfig{Name: "weather", Module: "example.com/weather"},
-		Transport:   TransportConfig{Type: "stdio", HTTPPort: DefaultHTTPPort},
-		Elicitation: ElicitationConfig{Enabled: true},
-	}
-
-	err := cfg.Validate()
-	require.Error(t, err)
-	assert.ErrorIs(t, err, ErrElicitationNeedsTool)
-}
-
 func TestValidateTool_DefaultSchemas(t *testing.T) {
 	t.Parallel()
 

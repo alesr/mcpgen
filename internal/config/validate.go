@@ -150,17 +150,6 @@ func (c *Config) validatePrompt() []error {
 	return err
 }
 
-func (c *Config) validateElicitation() []error {
-	if !c.Elicitation.Enabled {
-		return nil
-	}
-
-	if c.Tool == nil {
-		return []error{ErrElicitationNeedsTool}
-	}
-	return nil
-}
-
 func (c *Config) validateTransport() []error {
 	errs := make([]error, 0)
 	if strings.TrimSpace(c.Transport.Type) == "" {

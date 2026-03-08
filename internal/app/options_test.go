@@ -27,7 +27,6 @@ func TestParseRunOptions(t *testing.T) {
 		assert.True(t, opts.WithTools)
 		assert.True(t, opts.WithPrompts)
 		assert.True(t, opts.WithResources)
-		assert.False(t, opts.WithElicitation)
 		assert.False(t, opts.NoInspector)
 	})
 
@@ -42,7 +41,6 @@ func TestParseRunOptions(t *testing.T) {
 			"--with-tools=true",
 			"--with-prompts=false",
 			"--with-resources=true",
-			"--with-elicitation=true",
 			"--no-inspector",
 		}, out)
 		require.NoError(t, err)
@@ -53,7 +51,6 @@ func TestParseRunOptions(t *testing.T) {
 		assert.True(t, opts.WithTools)
 		assert.False(t, opts.WithPrompts)
 		assert.True(t, opts.WithResources)
-		assert.True(t, opts.WithElicitation)
 		assert.True(t, opts.NoInspector)
 	})
 
@@ -65,16 +62,6 @@ func TestParseRunOptions(t *testing.T) {
 		_, err := parseRunOptions([]string{"--transport", "tcp"}, out)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "invalid --transport")
-	})
-
-	t.Run("elicitation requires tools", func(t *testing.T) {
-		t.Parallel()
-
-		out := bytes.NewBuffer(nil)
-
-		_, err := parseRunOptions([]string{"--with-tools=false", "--with-elicitation=true"}, out)
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "--with-elicitation requires --with-tools=true")
 	})
 
 	t.Run("help", func(t *testing.T) {
@@ -133,13 +120,4 @@ func TestRunWithOptions(t *testing.T) {
 		assert.False(t, shouldTest)
 	})
 
-	t.Run("elicitation without tools is rejected", func(t *testing.T) {
-		opts := base
-		opts.WithTools = false
-		opts.WithElicitation = true
-
-		_, _, err := runWithOptions(opts, true)
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "--with-elicitation requires --with-tools=true")
-	})
 }

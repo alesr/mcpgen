@@ -12,15 +12,14 @@ import (
 )
 
 type runOptions struct {
-	Name            string
-	Transport       string
-	WithTools       bool
-	WithPrompts     bool
-	WithResources   bool
-	WithElicitation bool
-	NoInspector     bool
-	ShowHelp        bool
-	HasCLIInput     bool
+	Name          string
+	Transport     string
+	WithTools     bool
+	WithPrompts   bool
+	WithResources bool
+	NoInspector   bool
+	ShowHelp      bool
+	HasCLIInput   bool
 }
 
 type ConfigRun struct {
@@ -39,7 +38,6 @@ func parseRunOptions(args []string, out io.Writer) (runOptions, error) {
 	fs.BoolVar(&opts.WithTools, "with-tools", true, "Generate tool stub")
 	fs.BoolVar(&opts.WithPrompts, "with-prompts", true, "Generate prompt stub")
 	fs.BoolVar(&opts.WithResources, "with-resources", true, "Generate resource stub")
-	fs.BoolVar(&opts.WithElicitation, "with-elicitation", false, "Generate elicitation example in tool handlers")
 	fs.BoolVar(&opts.NoInspector, "no-inspector", false, "Skip inspector checks")
 
 	fs.Usage = func() {
@@ -58,7 +56,6 @@ Examples:
 Notes:
   - With no flags on a TTY, mcpgen starts interactive mode.
   - --with-tools, --with-prompts, and --with-resources default to true.
-  - --with-elicitation requires --with-tools=true.
   - Inspector checks run only when stdin is a TTY (or in interactive mode).
 `)
 	}
@@ -90,17 +87,10 @@ Notes:
 		return opts, fmt.Errorf("invalid --transport %q (expected stdio or http)", opts.Transport)
 	}
 
-	if opts.WithElicitation && !opts.WithTools {
-		return opts, errors.New("--with-elicitation requires --with-tools=true")
-	}
 	return opts, nil
 }
 
 func runWithOptions(opts runOptions, canRunInspector bool) (*ConfigRun, bool, error) {
-	if opts.WithElicitation && !opts.WithTools {
-		return nil, false, errors.New("--with-elicitation requires --with-tools=true")
-	}
-
 	cfg, outDir := scaffold.DefaultConfig(
 		config.DefaultOutputDir,
 		opts.Transport,
@@ -108,7 +98,6 @@ func runWithOptions(opts runOptions, canRunInspector bool) (*ConfigRun, bool, er
 		opts.WithTools,
 		opts.WithResources,
 		opts.WithPrompts,
-		opts.WithElicitation,
 	)
 
 	cfg.Server.Name = opts.Name

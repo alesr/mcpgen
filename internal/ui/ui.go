@@ -19,15 +19,15 @@ func RunInteractive() (*config.Config, string, bool, error) {
 
 	// init with defaults so the user sees them and can just hit enter
 	state := struct {
-		name, version, module, transport, outDir            string
-		addTool, addRes, addPrompt, addElicitation, runTest bool
+		name, version, module, transport, outDir string
+		addTool, addRes, addPrompt, runTest      bool
 	}{
 		name:      config.DefaultServerName,
 		version:   config.DefaultServerVersion,
 		module:    config.DefaultServerModule,
 		transport: config.DefaultTransport,
 		outDir:    config.DefaultOutputDir,
-		addTool:   true, addRes: true, addPrompt: true, addElicitation: true, runTest: true,
+		addTool:   true, addRes: true, addPrompt: true, runTest: true,
 	}
 
 	form := huh.NewForm(
@@ -42,9 +42,6 @@ func RunInteractive() (*config.Config, string, bool, error) {
 
 		huh.NewGroup(
 			huh.NewConfirm().Title("Add tool?").Value(&state.addTool),
-			huh.NewConfirm().Title("Add elicitation?").Value(&state.addElicitation).
-				// allow selection onlu of tool is added
-				Accessor(&toolDependentBoolAccessor{enabled: &state.addTool, value: &state.addElicitation}),
 			huh.NewConfirm().Title("Add resource?").Value(&state.addRes),
 			huh.NewConfirm().Title("Add prompt?").Value(&state.addPrompt),
 		).Title("Features"),
@@ -57,10 +54,6 @@ func RunInteractive() (*config.Config, string, bool, error) {
 
 	if err := form.Run(); err != nil {
 		return nil, "", false, fmt.Errorf("could not run form: %w", err)
-	}
-
-	if !state.addTool {
-		state.addElicitation = false
 	}
 
 	// handle the Port separately only if HTTP was chosen
@@ -83,7 +76,6 @@ func RunInteractive() (*config.Config, string, bool, error) {
 		state.addTool,
 		state.addRes,
 		state.addPrompt,
-		state.addElicitation,
 	)
 
 	cfg.Server.Name = strings.TrimSpace(state.name)
@@ -105,10 +97,9 @@ func runNonInteractive() (*config.Config, string, bool, error) {
 		config.DefaultOutputDir,
 		config.DefaultTransport,
 		config.DefaultHTTPPort,
-		true,  // addTool
-		true,  // addRes
-		true,  // addPrompt
-		false, // addElicitation
+		true, // addTool
+		true, // addRes
+		true, // addPrompt
 	)
 	if err := cfg.Validate(); err != nil {
 		return nil, "", false, fmt.Errorf("could not validate config: %w", err)
@@ -138,24 +129,4 @@ func parsePort(value string) (int, bool) {
 		return config.DefaultHTTPPort, false
 	}
 	return port, true
-}
-
-type toolDependentBoolAccessor struct {
-	enabled *bool
-	value   *bool
-}
-
-func (a *toolDependentBoolAccessor) Get() bool {
-	if !*a.enabled {
-		return false
-	}
-	return *a.value
-}
-
-func (a *toolDependentBoolAccessor) Set(v bool) {
-	if !*a.enabled {
-		*a.value = false
-		return
-	}
-	*a.value = v
 }

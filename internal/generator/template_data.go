@@ -10,17 +10,16 @@ import (
 )
 
 type TemplateData struct {
-	Module             string
-	ServerName         string
-	ServerDisplayName  string
-	ServerTitle        string
-	ServerVersion      string
-	Instructions       string
-	Transport          TransportData
-	Tools              []ToolData
-	Resources          []ResourceData
-	Prompts            []PromptData
-	ElicitationEnabled bool
+	Module            string
+	ServerName        string
+	ServerDisplayName string
+	ServerTitle       string
+	ServerVersion     string
+	Instructions      string
+	Transport         TransportData
+	Tools             []ToolData
+	Resources         []ResourceData
+	Prompts           []PromptData
 }
 
 type TransportData struct {
@@ -79,7 +78,6 @@ func buildTemplateData(cfg *config.Config, serverName string) TemplateData {
 			Type:     cfg.Transport.Type,
 			HTTPPort: cfg.Transport.HTTPPort,
 		},
-		ElicitationEnabled: cfg.Elicitation.Enabled,
 	}
 
 	if cfg.Tool != nil {

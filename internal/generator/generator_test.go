@@ -89,12 +89,11 @@ func TestGenerator_validate(t *testing.T) {
 	}
 }
 
-func TestRenderTemplate_HandlersWithElicitation(t *testing.T) {
+func TestRenderTemplate_Handlers(t *testing.T) {
 	t.Parallel()
 
 	data := TemplateData{
-		Module:             "example.com/test",
-		ElicitationEnabled: true,
+		Module: "example.com/test",
 		Tools: []ToolData{{
 			ID:     "greet",
 			GoName: "Greet",
@@ -108,7 +107,7 @@ func TestRenderTemplate_HandlersWithElicitation(t *testing.T) {
 	require.NoError(t, err)
 
 	out := string(content)
-	assert.True(t, strings.Contains(out, "req.Session.Elicit"))
+	assert.NotContains(t, out, "req.Session.Elicit")
 	assert.True(t, strings.Contains(out, "ToolNameFallbackGreet"))
 }
 
@@ -184,7 +183,6 @@ func TestGenerator_Run_ConditionalFeatureFiles(t *testing.T) {
 				tt.addTool,
 				tt.addResource,
 				tt.addPrompt,
-				false,
 			)
 
 			require.NoError(t, cfg.Validate())
