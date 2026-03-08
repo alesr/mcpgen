@@ -10,7 +10,6 @@ type (
 		Version     string `toml:"version"`
 		Title       string `toml:"title"`
 		Description string `toml:"description"`
-		WebsiteURL  string `toml:"website_url"`
 		Module      string `toml:"module"`
 	}
 
@@ -52,19 +51,14 @@ type (
 		Description string `toml:"description"`
 		Required    bool   `toml:"required"`
 	}
-
-	ElicitationConfig struct {
-		Enabled bool `toml:"enabled"`
-	}
 )
 
 type Config struct {
-	Server      ServerConfig      `toml:"server"`
-	Tool        *ToolConfig       `toml:"tool"`
-	Resource    *ResourceConfig   `toml:"resource"`
-	Prompt      *PromptConfig     `toml:"prompt"`
-	Elicitation ElicitationConfig `toml:"elicitation"`
-	Transport   TransportConfig   `toml:"transport"`
+	Server    ServerConfig    `toml:"server"`
+	Tool      *ToolConfig     `toml:"tool"`
+	Resource  *ResourceConfig `toml:"resource"`
+	Prompt    *PromptConfig   `toml:"prompt"`
+	Transport TransportConfig `toml:"transport"`
 }
 
 func (c *Config) Validate() error {
@@ -72,7 +66,6 @@ func (c *Config) Validate() error {
 	errs = append(errs, c.validateTool()...)
 	errs = append(errs, c.validateResource()...)
 	errs = append(errs, c.validatePrompt()...)
-	errs = append(errs, c.validateElicitation()...)
 	errs = append(errs, c.validateTransport()...)
 
 	if len(errs) > 0 {

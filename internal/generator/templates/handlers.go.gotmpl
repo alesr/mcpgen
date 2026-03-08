@@ -36,30 +36,8 @@ func (h *Handlers) Handle{{ .GoName }}(ctx context.Context, req *mcp.CallToolReq
 	if req != nil && req.Params != nil && req.Params.Name != "" {
 		name = req.Params.Name
 	}
-{{- if $.ElicitationEnabled }}
-	if req != nil && req.Session != nil {
-		res, err := req.Session.Elicit(ctx, &mcp.ElicitParams{
-			Message: "Provide optional context before running this tool.",
-			RequestedSchema: map[string]any{
-				"type": "object",
-				"properties": map[string]any{
-					"note": map[string]any{
-						"type":        "string",
-						"description": "Optional note for tool execution.",
-					},
-				},
-			},
-		})
-		if err != nil {
-			h.logger.Debug("elicitation unavailable; continuing", "tool", name, "error", err)
-		} else {
-			h.logger.Debug("elicitation completed", "tool", name, "action", res.Action)
-		}
-	}
-{{- else }}
 	_ = h
 	_ = ctx
-{{- end }}
 	return stubs.ToolResult(name), nil
 }
 

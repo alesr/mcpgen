@@ -11,7 +11,7 @@ import (
 func DefaultConfig(
 	outDir, transport string,
 	port int,
-	addTool, addResource, addPrompt, addElicitation bool,
+	addTool, addResource, addPrompt bool,
 ) (*config.Config, string) {
 	cfg := config.Config{
 		Server: config.ServerConfig{
@@ -42,7 +42,6 @@ func DefaultConfig(
 		cfg.Resource = &res
 	}
 
-	cfg.Elicitation.Enabled = addTool && addElicitation
 	return &cfg, outDir
 }
 
@@ -57,10 +56,6 @@ func PrintSummary(cfg *config.Config, outDir string) {
 	if cfg.Prompt != nil {
 		features = append(features, cfg.Prompt.ID)
 	}
-	if cfg.Elicitation.Enabled {
-		features = append(features, "elicitation")
-	}
-
 	featureList := "none"
 	if len(features) > 0 {
 		featureList = strings.Join(features, ", ")

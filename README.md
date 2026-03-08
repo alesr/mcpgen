@@ -37,7 +37,6 @@ Examples:
 ```sh
 mcpgen --name weather --transport stdio
 mcpgen --name weather --transport http --no-inspector
-mcpgen --dry-run --name weather
 ```
 
 ## What it generates

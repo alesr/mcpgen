@@ -27,20 +27,19 @@ func Run() error {
 	var (
 		cfg        = (*ConfigRun)(nil)
 		shouldTest bool
-		dryRun     bool
 	)
 
 	if opts.HasCLIInput {
 		canRunInspector := term.IsTerminal(os.Stdin.Fd())
 
-		runCfg, runShouldTest, runDryRun, err := runWithOptions(opts, canRunInspector)
+		runCfg, runShouldTest, err := runWithOptions(opts, canRunInspector)
 		if err != nil {
 			return err
 		}
 
 		cfg = runCfg
 		shouldTest = runShouldTest
-		dryRun = runDryRun
+
 	} else {
 		runCfg, runOut, runShouldTest, err := ui.RunInteractive()
 		if err != nil {
@@ -49,11 +48,6 @@ func Run() error {
 
 		cfg = &ConfigRun{Config: runCfg, OutDir: runOut}
 		shouldTest = runShouldTest
-	}
-
-	if dryRun {
-		fmt.Println("Dry run enabled. Skipping generation, checks, and inspector.")
-		return nil
 	}
 
 	gen := &generator.Generator{Config: cfg.Config, OutDir: cfg.OutDir}

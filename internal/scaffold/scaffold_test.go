@@ -6,41 +6,43 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDefaultConfig_ElicitationFlag(t *testing.T) {
+func TestDefaultConfig_Features(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name           string
-		addTool        bool
-		addElicitation bool
-		expected       bool
+		name        string
+		addTool     bool
+		addResource bool
+		addPrompt   bool
 	}{
-		{
-			name:           "enabled",
-			addTool:        true,
-			addElicitation: true,
-			expected:       true,
-		},
-		{
-			name:           "disabled",
-			addTool:        true,
-			addElicitation: false,
-			expected:       false,
-		},
-		{
-			name:           "requires tool",
-			addTool:        false,
-			addElicitation: true,
-			expected:       false,
-		},
+		{name: "all enabled", addTool: true, addResource: true, addPrompt: true},
+		{name: "all disabled", addTool: false, addResource: false, addPrompt: false},
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			cfg, _ := DefaultConfig("./generated", "stdio", 8080, tt.addTool, true, true, tt.addElicitation)
-			assert.Equal(t, tt.expected, cfg.Elicitation.Enabled)
+			cfg, _ := DefaultConfig("./generated", "stdio", 8080, tt.addTool, tt.addResource, tt.addPrompt)
+
+			if tt.addTool {
+				assert.NotNil(t, cfg.Tool)
+			} else {
+				assert.Nil(t, cfg.Tool)
+			}
+
+			if tt.addResource {
+				assert.NotNil(t, cfg.Resource)
+			} else {
+				assert.Nil(t, cfg.Resource)
+			}
+
+			if tt.addPrompt {
+				assert.NotNil(t, cfg.Prompt)
+			} else {
+				assert.Nil(t, cfg.Prompt)
+			}
 		})
 	}
 }
