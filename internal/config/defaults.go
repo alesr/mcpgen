@@ -10,9 +10,9 @@ import (
 
 const (
 	DefaultServerName        = "example-mcp"
+	DefaultServerTitle       = DefaultServerName
 	DefaultServerVersion     = "v0.1.0"
 	DefaultServerModule      = "example.com/example-mcp"
-	DefaultServerTitle       = DefaultServerName
 	DefaultServerDescription = "Generated MCP server."
 
 	DefaultTransport = "stdio"

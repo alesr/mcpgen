@@ -29,7 +29,6 @@ func TestParseRunOptions(t *testing.T) {
 		assert.True(t, opts.WithResources)
 		assert.False(t, opts.WithElicitation)
 		assert.False(t, opts.NoInspector)
-		assert.False(t, opts.DryRun)
 	})
 
 	t.Run("custom flags", func(t *testing.T) {
@@ -45,7 +44,6 @@ func TestParseRunOptions(t *testing.T) {
 			"--with-resources=true",
 			"--with-elicitation=true",
 			"--no-inspector",
-			"--dry-run",
 		}, out)
 		require.NoError(t, err)
 
@@ -57,7 +55,6 @@ func TestParseRunOptions(t *testing.T) {
 		assert.True(t, opts.WithResources)
 		assert.True(t, opts.WithElicitation)
 		assert.True(t, opts.NoInspector)
-		assert.True(t, opts.DryRun)
 	})
 
 	t.Run("invalid transport", func(t *testing.T) {
@@ -90,7 +87,6 @@ func TestParseRunOptions(t *testing.T) {
 		assert.True(t, opts.ShowHelp)
 		assert.Contains(t, out.String(), "Usage: mcpgen [flags]")
 		assert.Contains(t, out.String(), "--transport")
-		assert.Contains(t, out.String(), "--dry-run")
 	})
 
 	t.Run("positional args are rejected", func(t *testing.T) {
@@ -100,6 +96,7 @@ func TestParseRunOptions(t *testing.T) {
 
 		_, err := parseRunOptions([]string{"extra"}, out)
 		require.Error(t, err)
+
 		assert.Contains(t, err.Error(), "unexpected positional arguments")
 	})
 }
@@ -116,24 +113,22 @@ func TestRunWithOptions(t *testing.T) {
 	}
 
 	t.Run("inspector disabled without tty", func(t *testing.T) {
-		_, shouldTest, dryRun, err := runWithOptions(base, false)
+		_, shouldTest, err := runWithOptions(base, false)
 		require.NoError(t, err)
 		assert.False(t, shouldTest)
-		assert.False(t, dryRun)
 	})
 
 	t.Run("inspector enabled with tty by default", func(t *testing.T) {
-		_, shouldTest, dryRun, err := runWithOptions(base, true)
+		_, shouldTest, err := runWithOptions(base, true)
 		require.NoError(t, err)
 		assert.True(t, shouldTest)
-		assert.False(t, dryRun)
 	})
 
 	t.Run("no-inspector wins even with tty", func(t *testing.T) {
 		opts := base
 		opts.NoInspector = true
 
-		_, shouldTest, _, err := runWithOptions(opts, true)
+		_, shouldTest, err := runWithOptions(opts, true)
 		require.NoError(t, err)
 		assert.False(t, shouldTest)
 	})
@@ -143,7 +138,7 @@ func TestRunWithOptions(t *testing.T) {
 		opts.WithTools = false
 		opts.WithElicitation = true
 
-		_, _, _, err := runWithOptions(opts, true)
+		_, _, err := runWithOptions(opts, true)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "--with-elicitation requires --with-tools=true")
 	})

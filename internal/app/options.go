@@ -19,7 +19,6 @@ type runOptions struct {
 	WithResources   bool
 	WithElicitation bool
 	NoInspector     bool
-	DryRun          bool
 	ShowHelp        bool
 	HasCLIInput     bool
 }
@@ -42,7 +41,6 @@ func parseRunOptions(args []string, out io.Writer) (runOptions, error) {
 	fs.BoolVar(&opts.WithResources, "with-resources", true, "Generate resource stub")
 	fs.BoolVar(&opts.WithElicitation, "with-elicitation", false, "Generate elicitation example in tool handlers")
 	fs.BoolVar(&opts.NoInspector, "no-inspector", false, "Skip inspector checks")
-	fs.BoolVar(&opts.DryRun, "dry-run", false, "Print plan without generating files")
 
 	fs.Usage = func() {
 		_, _ = io.WriteString(out, `Usage: mcpgen [flags]
@@ -56,7 +54,6 @@ Flags:
 Examples:
   mcpgen --name weather --transport stdio
   mcpgen --name weather --transport http --no-inspector
-  mcpgen --dry-run --name weather
 
 Notes:
   - With no flags on a TTY, mcpgen starts interactive mode.
@@ -99,9 +96,9 @@ Notes:
 	return opts, nil
 }
 
-func runWithOptions(opts runOptions, canRunInspector bool) (*ConfigRun, bool, bool, error) {
+func runWithOptions(opts runOptions, canRunInspector bool) (*ConfigRun, bool, error) {
 	if opts.WithElicitation && !opts.WithTools {
-		return nil, false, false, errors.New("--with-elicitation requires --with-tools=true")
+		return nil, false, errors.New("--with-elicitation requires --with-tools=true")
 	}
 
 	cfg, outDir := scaffold.DefaultConfig(
@@ -117,10 +114,10 @@ func runWithOptions(opts runOptions, canRunInspector bool) (*ConfigRun, bool, bo
 	cfg.Server.Name = opts.Name
 
 	if err := cfg.Validate(); err != nil {
-		return nil, false, false, fmt.Errorf("could not validate config: %w", err)
+		return nil, false, fmt.Errorf("could not validate config: %w", err)
 	}
 
 	scaffold.PrintSummary(cfg, outDir)
 	shouldTest := canRunInspector && !opts.NoInspector
-	return &ConfigRun{Config: cfg, OutDir: outDir}, shouldTest, opts.DryRun, nil
+	return &ConfigRun{Config: cfg, OutDir: outDir}, shouldTest, nil
 }

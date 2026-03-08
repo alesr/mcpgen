@@ -10,7 +10,6 @@ type (
 		Version     string `toml:"version"`
 		Title       string `toml:"title"`
 		Description string `toml:"description"`
-		WebsiteURL  string `toml:"website_url"`
 		Module      string `toml:"module"`
 	}
 

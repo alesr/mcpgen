@@ -32,12 +32,12 @@ func (g *Generator) Run() error {
 	}
 
 	serverName := utils.DefaultServerName(g.Config.Server.Name)
+	data := buildTemplateData(g.Config, serverName)
 
-	if err := g.ensureOutputDirs(serverName); err != nil {
+	if err := g.ensureOutputDirs(serverName, data); err != nil {
 		return fmt.Errorf("could not ensure output dirs: %w", err)
 	}
 
-	data := buildTemplateData(g.Config, serverName)
 	if err := g.writeCoreTemplates(serverName, data); err != nil {
 		return fmt.Errorf("could not write core templates: %w", err)
 	}
@@ -85,15 +85,29 @@ func isUnsafeOutDir(outDir string) (bool, error) {
 	return absOutDir == cwd, nil
 }
 
-func (g *Generator) ensureOutputDirs(serverName string) error {
+func (g *Generator) ensureOutputDirs(serverName string, data TemplateData) error {
 	paths := []string{
 		g.outPath("cmd", serverName),
 		g.outPath("internal", "mcpapp"),
-		g.outPath("internal", "mcpapp", "tools"),
-		g.outPath("internal", "mcpapp", "tools", "handlers"),
-		g.outPath("internal", "mcpapp", "prompts"),
-		g.outPath("internal", "mcpapp", "resources"),
-		g.outPath("internal", "mcpapp", "stubs"),
+	}
+
+	if len(data.Tools) > 0 {
+		paths = append(paths,
+			g.outPath("internal", "mcpapp", "tools"),
+			g.outPath("internal", "mcpapp", "tools", "handlers"),
+		)
+	}
+
+	if len(data.Prompts) > 0 {
+		paths = append(paths, g.outPath("internal", "mcpapp", "prompts"))
+	}
+
+	if len(data.Resources) > 0 {
+		paths = append(paths, g.outPath("internal", "mcpapp", "resources"))
+	}
+
+	if len(data.Tools) > 0 || len(data.Prompts) > 0 || len(data.Resources) > 0 {
+		paths = append(paths, g.outPath("internal", "mcpapp", "stubs"))
 	}
 
 	for _, p := range paths {
@@ -117,11 +131,6 @@ func (g *Generator) writeCoreTemplates(serverName string, data TemplateData) err
 		{"cmd_main.go.gotmpl", filepath.Join("cmd", serverName, "main.go"), true},
 		{"instructions.go.gotmpl", filepath.Join("internal", "mcpapp", "instructions.go"), true},
 		{"mcpapp.go.gotmpl", filepath.Join("internal", "mcpapp", "mcpapp.go"), true},
-		{"tools.go.gotmpl", filepath.Join("internal", "mcpapp", "tools", "tools.go"), true},
-		{"handlers.go.gotmpl", filepath.Join("internal", "mcpapp", "tools", "handlers", "handlers.go"), true},
-		{"prompts.go.gotmpl", filepath.Join("internal", "mcpapp", "prompts", "prompts.go"), true},
-		{"resources.go.gotmpl", filepath.Join("internal", "mcpapp", "resources", "resources.go"), true},
-		{"stubs.go.gotmpl", filepath.Join("internal", "mcpapp", "stubs", "stubs.go"), true},
 	}
 
 	for _, j := range jobs {
@@ -141,9 +150,14 @@ func (g *Generator) writeOptionalTemplates(data TemplateData) error {
 	}
 
 	jobs := []optionalJob{
+		{"tools.go.gotmpl", "internal/mcpapp/tools/tools.go", len(data.Tools) > 0},
+		{"handlers.go.gotmpl", "internal/mcpapp/tools/handlers/handlers.go", len(data.Tools) > 0},
 		{"handlers_test.go.gotmpl", "internal/mcpapp/tools/handlers/handlers_test.go", len(data.Tools) > 0},
+		{"prompts.go.gotmpl", "internal/mcpapp/prompts/prompts.go", len(data.Prompts) > 0},
 		{"prompts_test.go.gotmpl", "internal/mcpapp/prompts/prompts_test.go", len(data.Prompts) > 0},
+		{"resources.go.gotmpl", "internal/mcpapp/resources/resources.go", len(data.Resources) > 0},
 		{"resources_test.go.gotmpl", "internal/mcpapp/resources/resources_test.go", len(data.Resources) > 0},
+		{"stubs.go.gotmpl", "internal/mcpapp/stubs/stubs.go", len(data.Tools) > 0 || len(data.Prompts) > 0 || len(data.Resources) > 0},
 	}
 
 	for _, j := range jobs {
