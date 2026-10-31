@@ -1,0 +1,15 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+  "name": {{ quote .RegistryName }},
+  "title": {{ quote .Title }},
+  "description": {{ quote .Description }},
+  "version": {{ quote .Version }},
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": {{ quote .OCIIdentifier }},
+      "version": {{ quote .Version }},
+      "transport": { "type": {{ if eq .Transport.Type "http" }}"streamable-http"{{ else }}"stdio"{{ end }} }
+    }
+  ]
+}

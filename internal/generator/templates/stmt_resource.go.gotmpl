@@ -1,0 +1,17 @@
+{{- if .IsTemplate }}
+server.AddResourceTemplate(&mcp.ResourceTemplate{
+	Name:        {{ quote .ID }},
+	Title:       {{ quote .Title }},
+	Description: {{ quote .Description }},
+	MIMEType:    {{ quote .MIMEType }},
+	URITemplate: {{ quote .URITemplate }},
+}, resources.{{ .GoName }})
+{{- else }}
+server.AddResource(&mcp.Resource{
+	Name:        {{ quote .ID }},
+	Title:       {{ quote .Title }},
+	Description: {{ quote .Description }},
+	MIMEType:    {{ quote .MIMEType }},
+	URI:         {{ quote .URI }},
+}, resources.{{ .GoName }})
+{{- end }}

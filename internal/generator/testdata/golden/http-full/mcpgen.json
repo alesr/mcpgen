@@ -1,0 +1,93 @@
+{
+  "version": 1,
+  "server": {
+    "name": "weather",
+    "title": "weather",
+    "version": "0.1.0",
+    "module": "github.com/acme/weather",
+    "description": "Generated MCP server.",
+    "instructions": "Generated MCP server."
+  },
+  "transport": {
+    "type": "http",
+    "httpPort": 9090
+  },
+  "protocol": "compat",
+  "tools": [
+    {
+      "id": "greet",
+      "title": "Greet",
+      "description": "Greets a user with a short welcome.",
+      "inputSchema": {
+        "type": "object"
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "readOnly": true
+    },
+    {
+      "id": "get_forecast",
+      "title": "Get Forecast",
+      "description": "Get the forecast for a city.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "city"
+        ]
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "readOnly": true,
+      "idempotent": true
+    }
+  ],
+  "prompts": [
+    {
+      "id": "welcome",
+      "title": "Welcome",
+      "description": "A friendly welcome prompt."
+    },
+    {
+      "id": "report",
+      "title": "Report",
+      "description": "Build a report.",
+      "arguments": [
+        {
+          "name": "topic",
+          "description": "Report topic",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "id": "readme",
+      "title": "Readme",
+      "description": "A readme stub resource.",
+      "uri": "file:///readme",
+      "mimeType": "text/plain",
+      "text": "Welcome to your MCP server."
+    },
+    {
+      "id": "config",
+      "title": "Config",
+      "description": "Resource stub for config.",
+      "uriTemplate": "file:///config/{name}",
+      "mimeType": "application/json",
+      "text": "{}"
+    }
+  ],
+  "features": {
+    "tasks": true,
+    "skills": true,
+    "oauth": true
+  }
+}

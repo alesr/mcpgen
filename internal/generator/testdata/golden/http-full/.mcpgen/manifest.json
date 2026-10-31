@@ -1,0 +1,138 @@
+{
+  "generator": "mcpgen",
+  "version": "golden",
+  "files": {
+    ".github/workflows/ci.yml": {
+      "owner": "mcpgen",
+      "sha256": "beabd0ab8832a870591db4be34002e72d3176d7ff92211dacc31799a71fb8fc2"
+    },
+    ".gitignore": {
+      "owner": "mcpgen",
+      "sha256": "1db0045d090d0fd62026f1beaa7484de39e8071ae7d01ab6ad166221100b5e6f"
+    },
+    "AGENTS.md": {
+      "owner": "mcpgen",
+      "sha256": "8e65c93b268a25d2a511245f6da79429a3050c46590f58fb7950ca060f6be9b6"
+    },
+    "Dockerfile": {
+      "owner": "mcpgen",
+      "sha256": "f25c6f62f6cdb925a01e47192af00b523f76967e7f852c3d4429d54dcabe01fa"
+    },
+    "Makefile": {
+      "owner": "mcpgen",
+      "sha256": "283ad4fdd4f3fff97f8eae91bb2a02ab9700f742ef4f8a1f51a67334183007ca"
+    },
+    "README.md": {
+      "owner": "mcpgen",
+      "sha256": "4d35fca442e62288d2fe28e4728565555fbb08a94a4c8f2665604b5171a749e7"
+    },
+    "cmd/weather/main.go": {
+      "owner": "mcpgen",
+      "sha256": "bef561b4481fdcd7a6da8737befe054aa8de9723e412f30d0c24f46c84763ca0"
+    },
+    "go.mod": {
+      "owner": "mcpgen",
+      "sha256": "0aaa9122cb8c00a075ff1c0e43f6dc81d253ea29a959ca1e28a15d4af1ab0574"
+    },
+    "internal/mcpapp/instructions.go": {
+      "owner": "mcpgen",
+      "sha256": "50c3d2e386fa04cea800e7d0d5a2a0084afaff7123f3ca8f2e26b4893e4769d5"
+    },
+    "internal/mcpapp/mcpapp.go": {
+      "owner": "mcpgen",
+      "sha256": "82d260cc9a58fd268f719712002572aa442641034e7cf0112441739df32d43da"
+    },
+    "internal/mcpapp/oauth.go": {
+      "owner": "mcpgen",
+      "sha256": "b6b012dffbde4f44eb4b80a29df30a60558c0255495cee69d4043fefa9e31570"
+    },
+    "internal/mcpapp/prompts.go": {
+      "owner": "mcpgen",
+      "sha256": "4b81291d777671aad8881ba8593ff2a8c6b1f38dc6554edc7f38aaf20a8cadec"
+    },
+    "internal/mcpapp/prompts/doc.go": {
+      "owner": "mcpgen",
+      "sha256": "5e054f0fcb81c2e39122ce66cb57ce67a80414ba5c7d6b5e2e7e60ccfa6e8aec"
+    },
+    "internal/mcpapp/prompts/report.go": {
+      "owner": "user",
+      "sha256": "82154980fecb8727f25368e8ac07681879d106324e89be293ebba1e469bee583"
+    },
+    "internal/mcpapp/prompts/report_test.go": {
+      "owner": "user",
+      "sha256": "ff240112c8c25c5d05cca034da193c452f23dbad6273556ced3a40523fcc1c99"
+    },
+    "internal/mcpapp/prompts/welcome.go": {
+      "owner": "user",
+      "sha256": "3e21f228f3daf5931b5c68a7e174426a2f620735f87a039fc247ff0d20da08a8"
+    },
+    "internal/mcpapp/prompts/welcome_test.go": {
+      "owner": "user",
+      "sha256": "78b0ca53f1b88452e1697a40f768b06cfc0297fc1fa057fcfaf7651e1032dd74"
+    },
+    "internal/mcpapp/resources.go": {
+      "owner": "mcpgen",
+      "sha256": "4f10d4948625ae229e79a78c741733998718725de5ff7b4535b91e3428753b1e"
+    },
+    "internal/mcpapp/resources/config.go": {
+      "owner": "user",
+      "sha256": "ffe180a103b5763730450e9cc36afe89356ddcdd77c9353d38715093e68464eb"
+    },
+    "internal/mcpapp/resources/config_test.go": {
+      "owner": "user",
+      "sha256": "60cdaaa94f43e28e5036acedaa727b90d67e3db6739d1e082b61d29d4d353691"
+    },
+    "internal/mcpapp/resources/doc.go": {
+      "owner": "mcpgen",
+      "sha256": "8d1889a22725e48597fe0abce49e2c545a1ee894d476d79d123d22bbe3b06611"
+    },
+    "internal/mcpapp/resources/readme.go": {
+      "owner": "user",
+      "sha256": "e9c9fad2ee108c1cda68bf3d246be3b56342b312b84cae0f52d4042f8462ebd0"
+    },
+    "internal/mcpapp/resources/readme_test.go": {
+      "owner": "user",
+      "sha256": "14abcdd24b64bc8b0ccbc7e6b34ec2d093d3be6116eb182aa042a6a323f431e8"
+    },
+    "internal/mcpapp/skills.go": {
+      "owner": "mcpgen",
+      "sha256": "7a9e7ed0c3a4f4119ab26c261f5523ba7f9f6ce2d8b0ce641d6dca4efb0d4708"
+    },
+    "internal/mcpapp/tasks.go": {
+      "owner": "mcpgen",
+      "sha256": "183dc3f61686ddc214ddf7b1dcfb2287def62b0cfe8cd67842173b7e79f4e47a"
+    },
+    "internal/mcpapp/tools.go": {
+      "owner": "mcpgen",
+      "sha256": "19878d9c20e78441aae5e61c48f424822e6fe39f2b6b7381adc7cd2ede4dff52"
+    },
+    "internal/mcpapp/tools/handlers/doc.go": {
+      "owner": "mcpgen",
+      "sha256": "5110de20ea417b40576350bfc71951513befa82d1d7b89082634edd7b6755587"
+    },
+    "internal/mcpapp/tools/handlers/get_forecast.go": {
+      "owner": "user",
+      "sha256": "eeb913678007f6c486d171958bc0206c2a778c11444730fb8fe2fbecbd6c51ab"
+    },
+    "internal/mcpapp/tools/handlers/get_forecast_test.go": {
+      "owner": "user",
+      "sha256": "41a5007e8b3592cb106e8aba9442a7831d7cc3f2d5ed177ebbc24b74792a82d5"
+    },
+    "internal/mcpapp/tools/handlers/greet.go": {
+      "owner": "user",
+      "sha256": "a799670732cf5399a9fe33445c2b1196b3090fda046fa8e08f4227a0293342ce"
+    },
+    "internal/mcpapp/tools/handlers/greet_test.go": {
+      "owner": "user",
+      "sha256": "aa913d9b4395586dcce5a9e7840d354841b941a4cd1d0510945c3d14aa27ebe4"
+    },
+    "mcpgen.json": {
+      "owner": "mcpgen",
+      "sha256": "97725acc3ff72e6fe1df3db1622c465b19bdc6213ee283ded8217204df5e32f9"
+    },
+    "server.json": {
+      "owner": "mcpgen",
+      "sha256": "01419604405aba18a515d70866dae0bb6b9a80d31850cdc394b2b4709a7643db"
+    }
+  }
+}

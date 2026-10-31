@@ -1,0 +1,23 @@
+server.AddPrompt(&mcp.Prompt{
+	Name:        {{ quote .ID }},
+	Title:       {{ quote .Title }},
+	Description: {{ quote .Description }},
+{{- if .Arguments }}
+	Arguments: []*mcp.PromptArgument{
+{{- range .Arguments }}
+		{
+			Name: {{ quote .Name }},
+{{- if .Title }}
+			Title: {{ quote .Title }},
+{{- end }}
+{{- if .Description }}
+			Description: {{ quote .Description }},
+{{- end }}
+{{- if .Required }}
+			Required: true,
+{{- end }}
+		},
+{{- end }}
+	},
+{{- end }}
+}, prompts.{{ .GoName }})

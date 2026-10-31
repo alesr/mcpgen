@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "server": {
+    "name": "bare",
+    "title": "bare",
+    "version": "0.1.0",
+    "module": "example.com/bare",
+    "description": "Generated MCP server.",
+    "instructions": "Generated MCP server."
+  },
+  "transport": {
+    "type": "http",
+    "httpPort": 8080
+  },
+  "protocol": "latest-only",
+  "features": {}
+}
