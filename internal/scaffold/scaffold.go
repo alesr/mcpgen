@@ -1,3 +1,5 @@
+// Package scaffold holds small helpers shared by the interactive UI and the
+// CLI for building a default project config and printing summaries.
 package scaffold
 
 import (
@@ -8,79 +10,41 @@ import (
 	"github.com/alesr/mcpgen/internal/pkg/utils"
 )
 
-func DefaultConfig(
-	outDir, transport string,
-	port int,
-	addTool, addResource, addPrompt bool,
-) (*config.Config, string) {
-	cfg := config.Config{
-		Server: config.ServerConfig{
-			Name:    config.DefaultServerName,
-			Version: config.DefaultServerVersion,
-			Module:  config.DefaultServerModule,
-		},
-		Transport: config.TransportConfig{
-			Type:     strings.ToLower(strings.TrimSpace(transport)),
-			HTTPPort: port,
-		},
-	}
-
-	if addTool {
-		cfg.Tool = &config.ToolConfig{ID: config.DefaultToolID}
-	}
-
-	if addPrompt {
-		cfg.Prompt = &config.PromptConfig{
-			ID:       config.DefaultPromptID,
-			Template: config.DefaultPromptTemplate,
-		}
-	}
-
-	if addResource {
-		res := config.ResourceConfig{ID: config.DefaultResourceID, Text: config.DefaultResourceText}
-		res.URI = "file:///" + config.DefaultResourceID
-		cfg.Resource = &res
-	}
-
-	return &cfg, outDir
+// DefaultConfig returns a config with the default tool/prompt/resource stubs.
+func DefaultConfig(transport string, port int, addTool, addResource, addPrompt bool) (*config.Config, string) {
+	cfg := config.DefaultConfig(transport, port, addTool, addResource, addPrompt)
+	return cfg, config.DefaultOutputDir
 }
 
+// PrintSummary prints a human summary of the config being generated.
 func PrintSummary(cfg *config.Config, outDir string) {
 	var features []string
-	if cfg.Tool != nil {
-		features = append(features, cfg.Tool.ID)
+	for _, t := range cfg.Tools {
+		features = append(features, "tool:"+t.ID)
 	}
-	if cfg.Resource != nil {
-		features = append(features, cfg.Resource.ID)
+	for _, p := range cfg.Prompts {
+		features = append(features, "prompt:"+p.ID)
 	}
-	if cfg.Prompt != nil {
-		features = append(features, cfg.Prompt.ID)
+	for _, r := range cfg.Resources {
+		features = append(features, "resource:"+r.ID)
 	}
 	featureList := "none"
 	if len(features) > 0 {
 		featureList = strings.Join(features, ", ")
 	}
 
-	var resourceDetail string
-	if cfg.Resource != nil {
-		res := cfg.Resource
-		if res.URITemplate != "" {
-			resourceDetail = fmt.Sprintf("  Resource template: %s\n", res.URITemplate)
-		} else {
-			resourceDetail = fmt.Sprintf("  Resource uri: %s\n", res.URI)
-		}
-	}
-
 	fmt.Printf(`
 Summary
   Server:   %s (%s)
   Module:   %s
+  Transport: %s
   Features: %s
-%s  Output:   %s
+  Output:   %s
 
-`, cfg.Server.Name, cfg.Server.Version, cfg.Server.Module, featureList, resourceDetail, outDir)
+`, cfg.Server.Name, cfg.Server.Version, cfg.Server.Module, cfg.Transport.Type, featureList, outDir)
 }
 
+// PrintInspectorHint prints how to open the generated server in the Inspector.
 func PrintInspectorHint(outDir string, cfg *config.Config) {
 	serverName := utils.DefaultServerName(cfg.Server.Name)
 
@@ -90,10 +54,7 @@ Open in Inspector:
   cd %s
   go run ./cmd/%s &
   npx @modelcontextprotocol/inspector
-  (In the UI, set transport to HTTP and use http://localhost:%d/mcp)
-
-  Single command:
-  	cd generated && npx @modelcontextprotocol/inspector
+  (set transport to streamable HTTP and use http://localhost:%d/mcp)
 `, outDir, serverName, cfg.Transport.HTTPPort)
 		return
 	}
@@ -102,6 +63,6 @@ Open in Inspector:
 Open in Inspector:
   cd %s
   npx @modelcontextprotocol/inspector
-  (In the UI, choose stdio and run: go run ./cmd/%s)
+  (choose stdio and run: go run ./cmd/%s)
 `, outDir, serverName)
 }
