@@ -86,11 +86,12 @@ func BuildSchemaDoc(version string) (*SchemaDoc, error) {
 		Commands: []CommandDoc{
 			{
 				Name:        "new",
-				Usage:       "mcpgen new [dir] [--name] [--module] [--transport stdio|http] [--port] [--protocol compat|latest-only] [--tool spec.json ...] [--prompt spec.json ...] [--resource spec.json ...] [--features tasks,skills,oauth] [--json] [--dry-run] [--force] [--no-check]",
+				Usage:       "mcpgen new [dir] [--name] [--module] [--version] [--transport stdio|http] [--port] [--protocol compat|latest-only] [--tool spec.json ...] [--prompt spec.json ...] [--resource spec.json ...] [--features tasks,skills,oauth] [--no-stubs] [--json] [--dry-run] [--force] [--no-check]",
 				Description: "Generate a new MCP server project. With no arguments on a TTY, mcpgen new runs interactively. Re-running on an existing mcpgen project requires --force and never overwrites user-modified files.",
 				Flags: []FlagDoc{
 					{Name: "name", Type: "string", Default: config.DefaultServerName, Help: "Server name"},
 					{Name: "module", Type: "string", Default: "derived from name", Help: "Go module path"},
+					{Name: "version", Type: "string", Default: config.DefaultServerVersion, Help: "Server version (semver)"},
 					{Name: "transport", Type: "string", Default: "stdio", Help: "stdio|http"},
 					{Name: "port", Type: "int", Default: "8080", Help: "HTTP port when transport=http"},
 					{Name: "protocol", Type: "string", Default: "compat", Help: "compat|latest-only (MCP 2026-07-28 only)"},
@@ -98,6 +99,7 @@ func BuildSchemaDoc(version string) (*SchemaDoc, error) {
 					{Name: "prompt", Type: "string", Repeat: true, Help: "Prompt spec JSON file, optionally name=file.json"},
 					{Name: "resource", Type: "string", Repeat: true, Help: "Resource spec JSON file, optionally name=file.json"},
 					{Name: "features", Type: "string", Help: "Comma-separated opt-in features: tasks,skills,oauth"},
+					{Name: "no-stubs", Type: "bool", Help: "Do not add the default tool/prompt/resource stubs"},
 					{Name: "json", Type: "bool", Help: "Emit the JSON envelope on stdout"},
 					{Name: "dry-run", Type: "bool", Help: "Print the full plan (file tree, create/modify/skip, config summary) as JSON; write nothing"},
 					{Name: "force", Type: "bool", Help: "Allow generating into an existing directory"},
