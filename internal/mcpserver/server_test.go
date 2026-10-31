@@ -96,5 +96,5 @@ func TestMCPServer_EndToEnd(t *testing.T) {
 	assert.Equal(t, "mcpgen", out["tool"])
 
 	cancel()
-	<-serverErr
+	require.ErrorIs(t, <-serverErr, context.Canceled)
 }
