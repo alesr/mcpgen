@@ -12,6 +12,5 @@
     "type": "http",
     "httpPort": 8080
   },
-  "protocol": "latest-only",
-  "features": {}
+  "protocol": "latest-only"
 }

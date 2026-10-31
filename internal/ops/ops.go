@@ -206,8 +206,8 @@ func LoadSpecs[T any](flags []string) ([]T, error) {
 	out := make([]T, 0, len(flags))
 	for _, f := range flags {
 		name, path := "", f
-		if i := strings.Index(f, "="); i >= 0 {
-			name, path = f[:i], f[i+1:]
+		if n, p, ok := strings.Cut(f, "="); ok {
+			name, path = n, p
 		}
 		raw, err := os.ReadFile(path)
 		if err != nil {
@@ -238,7 +238,7 @@ func ApplyFeatures(cfg *config.Config, raw string) error {
 	if strings.TrimSpace(raw) == "" {
 		return nil
 	}
-	for _, f := range strings.Split(raw, ",") {
+	for f := range strings.SplitSeq(raw, ",") {
 		switch strings.ToLower(strings.TrimSpace(f)) {
 		case "tasks":
 			cfg.Features.Tasks = true

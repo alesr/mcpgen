@@ -63,8 +63,7 @@ func ExitCodeOf(err error) int {
 	if err == nil {
 		return ExitOK
 	}
-	var ee *ExitError
-	if errors.As(err, &ee) {
+	if ee, ok := errors.AsType[*ExitError](err); ok {
 		return ee.ExitCode
 	}
 	return ExitFailure
@@ -72,11 +71,8 @@ func ExitCodeOf(err error) int {
 
 // AsExitError extracts the structured payload from err, or nil.
 func AsExitError(err error) *ExitError {
-	var ee *ExitError
-	if errors.As(err, &ee) {
-		return ee
-	}
-	return nil
+	ee, _ := errors.AsType[*ExitError](err)
+	return ee
 }
 
 // NewExitError builds an ExitError.

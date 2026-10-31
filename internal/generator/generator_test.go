@@ -256,7 +256,7 @@ func TestGenerator_RegenTwice_KeepsModifiedMCPGenFile(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, os.WriteFile(mcpapp, append(raw, []byte("\n// hand edit\n")...), 0o644))
 
-	for i := 0; i < 2; i++ {
+	for i := range 2 {
 		res, err := (&Generator{Config: testConfig(t, "stdio"), OutDir: dir, Force: true, Version: "test"}).Run()
 		require.NoError(t, err)
 		assert.Contains(t, res.FilesSkipped, "internal/mcpapp/mcpapp.go", "regen %d must skip the modified file", i+1)

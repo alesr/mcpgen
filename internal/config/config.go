@@ -31,7 +31,7 @@ type (
 		Tools     []Tool     `json:"tools,omitempty"`
 		Prompts   []Prompt   `json:"prompts,omitempty"`
 		Resources []Resource `json:"resources,omitempty"`
-		Features  Features   `json:"features,omitempty"`
+		Features  Features   `json:"features,omitzero"`
 	}
 
 	Server struct {

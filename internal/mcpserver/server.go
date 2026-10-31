@@ -44,7 +44,7 @@ func NewServer(version string) *mcp.Server {
 	}, func(ctx context.Context, req *mcp.CallToolRequest, in NewInput) (*mcp.CallToolResult, NewOutput, error) {
 		o, err := in.toOptions(version)
 		if err != nil {
-			return nil, NewOutput{OK: false, Error: strPtr(err.Error())}, nil
+			return nil, NewOutput{OK: false, Error: new(err.Error())}, nil
 		}
 		res, err := ops.New(o)
 		return nil, newOutput(res, err), nil
@@ -57,15 +57,15 @@ func NewServer(version string) *mcp.Server {
 	}, func(ctx context.Context, req *mcp.CallToolRequest, in AddInput) (*mcp.CallToolResult, AddOutput, error) {
 		kind, err := adder.ParseKind(in.Kind)
 		if err != nil {
-			return nil, AddOutput{OK: false, Error: strPtr(err.Error())}, nil
+			return nil, AddOutput{OK: false, Error: new(err.Error())}, nil
 		}
 		specRaw, err := json.Marshal(in.Spec)
 		if err != nil {
-			return nil, AddOutput{OK: false, Error: strPtr(err.Error())}, nil
+			return nil, AddOutput{OK: false, Error: new(err.Error())}, nil
 		}
 		specPath, cleanup, err := writeTempSpec(specRaw)
 		if err != nil {
-			return nil, AddOutput{OK: false, Error: strPtr(err.Error())}, nil
+			return nil, AddOutput{OK: false, Error: new(err.Error())}, nil
 		}
 		defer cleanup()
 		res, err := ops.Add(kind, specPath, adder.Options{Dir: in.Dir, Force: in.Force, DryRun: in.DryRun, Version: version})
@@ -74,7 +74,7 @@ func NewServer(version string) *mcp.Server {
 			out.Result = res
 		}
 		if err != nil {
-			out.Error = strPtr(err.Error())
+			out.Error = new(err.Error())
 			if ee := cli.AsExitError(err); ee != nil {
 				out.ExitCode = ee.ExitCode
 				out.Code = string(ee.Code)
@@ -102,7 +102,7 @@ func NewServer(version string) *mcp.Server {
 		out := CheckOutput{OK: res.OK, Result: res}
 		if !res.OK {
 			if err := res.Err(); err != nil {
-				out.Error = strPtr(err.Error())
+				out.Error = new(err.Error())
 				if ee := cli.AsExitError(err); ee != nil {
 					out.ExitCode = ee.ExitCode
 					out.Code = string(ee.Code)
@@ -245,7 +245,7 @@ func newOutput(res *ops.NewResult, err error) NewOutput {
 		}
 	}
 	if err != nil {
-		out.Error = strPtr(err.Error())
+		out.Error = new(err.Error())
 		if ee := cli.AsExitError(err); ee != nil {
 			out.ExitCode = ee.ExitCode
 			out.Code = string(ee.Code)
@@ -302,8 +302,6 @@ type CheckOutput struct {
 }
 
 type SchemaInput struct{}
-
-func strPtr(s string) *string { return &s }
 
 func mustUnmarshalMap(v any) any {
 	raw, err := json.Marshal(v)

@@ -351,8 +351,7 @@ func firstGoLocation(out string) string {
 
 // firstTestFailure extracts the first failing test name and its file:line.
 func firstTestFailure(out string) (loc, test string) {
-	lines := strings.Split(out, "\n")
-	for _, line := range lines {
+	for line := range strings.SplitSeq(out, "\n") {
 		if m := failRe.FindStringSubmatch(strings.TrimSpace(line)); m != nil {
 			test = m[1]
 		}
