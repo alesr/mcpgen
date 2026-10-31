@@ -1,0 +1,41 @@
+# mcpgen release configuration. Tag vX.Y.Z and push; CI (goreleaser release)
+# builds binaries for linux/macOS/windows (no CGO) and publishes.
+version: 2
+
+builds:
+  - id: mcpgen
+    main: .
+    binary: mcpgen
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    ldflags:
+      - -s -w -X github.com/alesr/mcpgen/internal/app.Version={{.Version}}
+
+archives:
+  - id: mcpgen
+    formats: [tar.gz, zip]
+    files:
+      - LICENSE
+      - README.md
+      - SKILL.md
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  use: github
+  groups:
+    - title: Features
+      regexp: "^.*?feat(\\([\\w\\-\\.\\/]+\\))??!?:\\s+.*$"
+      order: 0
+    - title: Bug fixes
+      regexp: "^.*?fix(\\([\\w\\-\\.\\/]+\\))??!?:\\s+.*$"
+      order: 1
+    - title: Others
+      order: 999
+
+release:
+  draft: false

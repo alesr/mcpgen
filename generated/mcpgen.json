@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "server": {
+    "name": "example-mcp",
+    "title": "example-mcp",
+    "version": "0.1.0",
+    "module": "example.com/example-mcp",
+    "description": "Generated MCP server.",
+    "instructions": "Generated MCP server."
+  },
+  "transport": {
+    "type": "stdio",
+    "httpPort": 8080
+  },
+  "protocol": "compat",
+  "tools": [
+    {
+      "id": "greet",
+      "title": "Greet",
+      "description": "Greets a user with a short welcome.",
+      "inputSchema": {
+        "type": "object"
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "readOnly": true
+    }
+  ],
+  "prompts": [
+    {
+      "id": "welcome",
+      "title": "Welcome",
+      "description": "A friendly welcome prompt."
+    }
+  ],
+  "resources": [
+    {
+      "id": "readme",
+      "title": "Readme",
+      "description": "A readme stub resource.",
+      "uri": "file:///readme",
+      "mimeType": "text/plain",
+      "text": "Welcome to your MCP server."
+    }
+  ]
+}

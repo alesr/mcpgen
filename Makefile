@@ -24,3 +24,7 @@ gen:
 
 .PHONY: check
 check: tidy fmt vet test
+
+.PHONY: golden
+golden:
+	UPDATE_GOLDEN=1 go test ./internal/generator -run '^TestGolden$' -count=1

@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - run: go mod tidy
+      - run: test -z "$(gofmt -l .)"
+      - run: go vet ./...
+      - run: go build ./...
+      - run: go test -race ./...
+
+{{- if eq .Transport.Type "http" }}
+  # The conformance suite speaks HTTP; stdio servers have no -addr flag, so
+  # this job only exists for the http transport (run `mcpgen check` locally
+  # for the stdio case).
+  conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: go mod tidy
+      - run: go build -o dist/server ./cmd/{{ .ServerName }}
+      - name: MCP conformance suite (2026-07-28)
+        run: |
+          dist/server -addr 127.0.0.1:18080 &
+          echo $! > server.pid
+          sleep 1
+          npx --yes @modelcontextprotocol/conformance server --url http://127.0.0.1:18080/mcp
+          status=$?
+          kill $(cat server.pid) 2>/dev/null || true
+          exit $status
+{{- end }}

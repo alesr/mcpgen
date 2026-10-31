@@ -1,3 +1,6 @@
-generated/*
-!generated/.gitkeep
 .coverage/*
+/dist/
+/results/
+
+# AGENTS.md is a generated artifact snapshot-tested in testdata/golden.
+!AGENTS.md

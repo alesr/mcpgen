@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/alesr/mcpgen/schema/mcpgen.schema.json",
+  "title": "mcpgen project config (mcpgen.json)",
+  "description": "Single source of truth for an mcpgen-generated MCP server project. Version 1.",
+  "type": "object",
+  "required": ["version", "server", "transport"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 1,
+      "description": "Config format version. mcpgen v1 supports only 1."
+    },
+    "server": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "title": { "type": "string" },
+        "version": { "type": "string", "description": "SemVer of the server, e.g. 0.1.0" },
+        "module": { "type": "string", "minLength": 1, "description": "Go module path" },
+        "description": { "type": "string" },
+        "instructions": { "type": "string", "description": "Instructions sent to MCP clients" }
+      }
+    },
+    "transport": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "type": "string", "enum": ["stdio", "http"] },
+        "httpPort": { "type": "integer", "minimum": 1, "maximum": 65535 }
+      }
+    },
+    "protocol": {
+      "type": "string",
+      "enum": ["compat", "latest-only"],
+      "default": "compat",
+      "description": "compat negotiates down to legacy MCP versions; latest-only serves only 2026-07-28"
+    },
+    "tools": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/tool" }
+    },
+    "prompts": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/prompt" }
+    },
+    "resources": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/resource" }
+    },
+    "features": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tasks": { "type": "boolean" },
+        "skills": { "type": "boolean" },
+        "oauth": { "type": "boolean" }
+      }
+    }
+  },
+  "definitions": {
+    "tool": {
+      "type": "object",
+      "required": ["id"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "pattern": "^[a-zA-Z0-9_-]+$" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "inputSchema": { "type": "object", "description": "JSON Schema (draft 2020-12 object) for tool input" },
+        "outputSchema": { "type": "object", "description": "JSON Schema (draft 2020-12 object) for structured output" },
+        "readOnly": { "type": "boolean", "description": "Maps to the tool readOnlyHint annotation" },
+        "idempotent": { "type": "boolean", "description": "Maps to the tool idempotentHint annotation" }
+      }
+    },
+    "prompt": {
+      "type": "object",
+      "required": ["id"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "pattern": "^[a-zA-Z0-9_-]+$" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "arguments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name"],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "title": { "type": "string" },
+              "description": { "type": "string" },
+              "required": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "resource": {
+      "type": "object",
+      "required": ["id"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "pattern": "^[a-zA-Z0-9_-]+$" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "uri": { "type": "string", "description": "Absolute URI. Exactly one of uri/uriTemplate." },
+        "uriTemplate": { "type": "string", "description": "RFC 6570 URI template. Exactly one of uri/uriTemplate." },
+        "mimeType": { "type": "string" },
+        "text": { "type": "string", "description": "Stub content served by the generated handler" }
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+server.AddTool(&mcp.Tool{
+	Name:         {{ quote .ID }},
+	Title:        {{ quote .Title }},
+	Description:  {{ quote .Description }},
+	InputSchema:  json.RawMessage({{ quote .InputSchema }}),
+	OutputSchema: json.RawMessage({{ quote .OutputSchema }}),
+	Annotations: &mcp.ToolAnnotations{
+		ReadOnlyHint:   {{ .ReadOnly }},
+		IdempotentHint: {{ .Idempotent }},
+	},
+}, handlers.{{ .GoName }})

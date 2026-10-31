@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
-	"slices"
 	"strconv"
 	"strings"
 	"text/template"
@@ -13,7 +12,8 @@ import (
 //go:embed templates/*.gotmpl
 var templateFS embed.FS
 
-func RenderTemplate(name string, data TemplateData) ([]byte, error) {
+// RenderTemplate renders the named embedded template with data.
+func RenderTemplate(name string, data any) ([]byte, error) {
 	tmpl, err := template.New(name).Funcs(templateFuncs()).ParseFS(templateFS, "templates/*.gotmpl")
 	if err != nil {
 		return nil, err
@@ -26,16 +26,19 @@ func RenderTemplate(name string, data TemplateData) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func templateFuncs() template.FuncMap {
-	return template.FuncMap{
-		"quote":           strconv.Quote,
-		"join":            strings.Join,
-		"hasRequiredArgs": hasRequiredArgs,
+// RenderStatement renders one of the stmt_*.gotmpl templates (a single
+// registration statement for `mcpgen add` insertion).
+func RenderStatement(name string, data any) (string, error) {
+	raw, err := RenderTemplate(name, data)
+	if err != nil {
+		return "", err
 	}
+	return strings.TrimRight(string(raw), "\n"), nil
 }
 
-func hasRequiredArgs(prompts []PromptData) bool {
-	return slices.ContainsFunc(prompts, func(p PromptData) bool {
-		return len(p.RequiredArgs) > 0
-	})
+func templateFuncs() template.FuncMap {
+	return template.FuncMap{
+		"quote": strconv.Quote,
+		"join":  strings.Join,
+	}
 }

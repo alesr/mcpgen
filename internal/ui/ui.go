@@ -1,3 +1,4 @@
+// Package ui implements the interactive (TUI) flow for `mcpgen new`.
 package ui
 
 import (
@@ -12,12 +13,13 @@ import (
 	"github.com/charmbracelet/x/term"
 )
 
+// RunInteractive runs the interactive flow and returns the config, output dir,
+// and whether to run the validation pipeline afterwards.
 func RunInteractive() (*config.Config, string, bool, error) {
 	if !isTTY(os.Stdin) {
 		return runNonInteractive()
 	}
 
-	// init with defaults so the user sees them and can just hit enter
 	state := struct {
 		name, version, module, transport, outDir string
 		addTool, addRes, addPrompt, runTest      bool
@@ -48,15 +50,13 @@ func RunInteractive() (*config.Config, string, bool, error) {
 
 		huh.NewGroup(
 			huh.NewInput().Title("Output dir").Value(&state.outDir),
-			huh.NewConfirm().Title("Run inspector test now?").Value(&state.runTest),
+			huh.NewConfirm().Title("Run checks now?").Value(&state.runTest),
 		).Title("Run"),
 	).WithTheme(huh.ThemeCatppuccin())
 
 	if err := form.Run(); err != nil {
 		return nil, "", false, fmt.Errorf("could not run form: %w", err)
 	}
-
-	// handle the Port separately only if HTTP was chosen
 
 	port := config.DefaultHTTPPort
 	if state.transport == "http" {
@@ -69,14 +69,14 @@ func RunInteractive() (*config.Config, string, bool, error) {
 		}
 	}
 
-	cfg, out := scaffold.DefaultConfig(
-		state.outDir,
+	cfg := config.DefaultConfig(
 		state.transport,
 		port,
 		state.addTool,
 		state.addRes,
 		state.addPrompt,
 	)
+	out := state.outDir
 
 	cfg.Server.Name = strings.TrimSpace(state.name)
 	cfg.Server.Version = strings.TrimSpace(state.version)
@@ -91,15 +91,12 @@ func RunInteractive() (*config.Config, string, bool, error) {
 }
 
 func runNonInteractive() (*config.Config, string, bool, error) {
-	fmt.Println("No TTY detected. Using defaults and skipping inspector test.")
+	fmt.Println("No TTY detected. Using defaults and skipping checks.")
 
 	cfg, out := scaffold.DefaultConfig(
-		config.DefaultOutputDir,
 		config.DefaultTransport,
 		config.DefaultHTTPPort,
-		true, // addTool
-		true, // addRes
-		true, // addPrompt
+		true, true, true,
 	)
 	if err := cfg.Validate(); err != nil {
 		return nil, "", false, fmt.Errorf("could not validate config: %w", err)
