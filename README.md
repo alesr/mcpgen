@@ -1,90 +1,171 @@
-# MCPGEN
-[![codecov](https://codecov.io/gh/alesr/mcpgen/graph/badge.svg?token=pSA7mD0Qn8)](https://codecov.io/gh/alesr/mcpgen)
-[![Go](https://img.shields.io/badge/Go-1.25-blue?logo=go&logoColor=white)](https://go.dev)
+# mcpgen
+
+[![Go](https://img.shields.io/badge/Go-1.26-blue?logo=go&logoColor=white)](https://go.dev)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A cookiecutter for bootstrapping MCP servers in Go.
+**Deterministic Go codegen for spec-compliant MCP servers — bootstrap in seconds, extend forever, verify until green.**
 
-Answer a few questions → get a clean, tested, inspector-ready MCP server in seconds.
+mcpgen generates MCP servers in Go on the official
+[`go-sdk`](https://github.com/modelcontextprotocol/go-sdk) v1.8.0, targeting
+MCP spec **2026-07-28**. It is built for agent-driven execution: every command
+speaks a JSON envelope with semantic exit codes, so a coding agent can loop
+`new → check → fix` until green without human help. Humans get an interactive
+TUI.
 
-## Requirements
-
-- Go 1.25
-- Node.js (for inspector checks)
-- `npx`
-
-## Quick start
+## Install
 
 ```sh
 go install github.com/alesr/mcpgen@latest
-mcpgen
 ```
 
-You’ll get a small interactive flow. Press Enter to accept defaults.
+Requires Go 1.26+. Node.js/npx are optional (used for the conformance suite and
+Inspector).
 
+## The agent loop (canonical usage)
 
-## CLI flags
-
-You can also run in non-interactive mode with flags:
-
-```sh
-mcpgen --help
+```bash
+mcpgen new ./weather --name weather --module github.com/acme/weather \
+  --transport http --tool tools/forecast.json --json
+mcpgen check ./weather --json        # loop until exit 0
+# ...agent implements handler logic in the user-owned files...
+mcpgen add tool tools/health.json --dir ./weather --json
+mcpgen check ./weather --json        # exit 0 = green
 ```
-Inspector checks in flag mode run only when stdin is a TTY (matching the existing non-interactive default of skipping inspector checks).
 
-Examples:
+`mcpgen schema` emits the full machine-readable spec (commands, flags, exit
+codes, envelope shape, the `mcpgen.json` JSON Schema) — the self-discovery
+entry point, no docs needed.
 
-```sh
-mcpgen --name weather --transport stdio
-mcpgen --name weather --transport http --no-inspector
+## Commands
+
+| Command | What it does |
+|---|---|
+| `mcpgen new [dir] [flags]` | Generate a project. No flags + TTY → interactive TUI. |
+| `mcpgen add tool\|prompt\|resource <spec.json>` | Add a capability to an existing project (AST-aware marker insertion; never touches user files). |
+| `mcpgen check [dir]` | Verify: config → tidy → fmt → vet → build → test → conformance. Exit 0 = green. |
+| `mcpgen schema` | Machine-readable spec of the CLI contract. |
+| `mcpgen version` | Print version (`--json` for the envelope). |
+| `mcpgen mcp` | Run mcpgen itself as an MCP server (stdio): `mcpgen_new`, `mcpgen_add`, `mcpgen_check`, `mcpgen_schema`. |
+| `mcpgen` | Interactive mode on a TTY. |
+
+### Flags for `new`
+
+`--name --module --version --transport stdio|http --port --protocol compat|latest-only`
+`--tool spec.json ... --prompt spec.json ... --resource spec.json ...` (repeatable, `name=file.json` allowed)
+`--features tasks,skills,oauth` `--no-stubs` `--json` `--dry-run` `--force` `--no-check`
+
+`--dry-run` prints the full plan (file tree, create/overwrite/skip, owners —
+including `mcpgen.json` and `.mcpgen/manifest.json`) and writes nothing.
+
+### Removing a capability
+
+`mcpgen.json` is the single source of truth. To remove a tool/prompt/resource:
+
+1. Delete its entry from `mcpgen.json`.
+2. Delete its user-owned files, e.g. `internal/mcpapp/tools/handlers/<tool>.go`
+   and `<tool>_test.go` (delete these **before** regenerating — a regen only
+   prunes manifest entries for files that are already gone).
+3. Run `mcpgen new <dir> --force --no-check` (or `mcpgen check <dir>` after).
+
+The registration is removed by the regen; step 2 takes care of the orphaned
+handler files and their manifest entries.
+
+## The JSON envelope
+
+Every command with `--json` writes exactly one JSON document to stdout;
+progress goes to stderr. Errors are always structured, even without `--json`.
+
+```json
+{
+  "ok": true,
+  "result": { "dir": "./weather", "files_written": ["cmd/weather/main.go"], "files_skipped": [], "next_actions": null },
+  "error": null,
+  "next_actions": ["cd weather", "mcpgen check ./weather --json"]
+}
 ```
+
+```json
+{
+  "ok": false,
+  "result": null,
+  "error": {
+    "stage": "test",
+    "code": "TESTS_FAILED",
+    "message": "1 of 3 tests failed",
+    "fix": "first failure: TestGreet (greet_test.go:30); run `go test -race ./...` in ./weather",
+    "command": "go test -race ./...",
+    "exit_code": 1
+  },
+  "next_actions": ["fix the failing test, then re-run mcpgen check ./weather --json"]
+}
+```
+
+## Exit codes
+
+| Code | Meaning |
+|---|---|
+| 0 | success |
+| 1 | general failure (build/test/conformance failed) |
+| 2 | usage error (bad flags/args, unknown config version) |
+| 3 | target dir exists without `--force` / not an mcpgen project |
+| 4 | permission denied |
+| 5 | conflict (duplicate id, markers missing) |
+| 6 | prerequisite missing (go toolchain, node/npx) |
 
 ## What it generates
 
-- `cmd/<server>/main.go` – entrypoint
-- `internal/mcpapp/` – server wiring + handlers
-- `internal/mcpapp/tools/handlers/` – stub tool handler(s)
-- `internal/mcpapp/prompts/` – stub prompts
-- `internal/mcpapp/resources/` – stub resources
-- `internal/mcpapp/stubs/` – shared stub responses
-- unit tests for tools/prompts/resources (only for enabled features)
+```
+cmd/<name>/main.go                        entrypoint (mcpgen-owned)
+internal/mcpapp/mcpapp.go                 server wiring: Stateless HTTP, SupportedProtocolVersions, SetCacheable
+internal/mcpapp/tools.go                  registration with // mcpgen:begin/end tools markers (mcpgen-owned)
+internal/mcpapp/tools/handlers/<tool>.go one user-owned handler + test per tool
+internal/mcpapp/prompts/<prompt>.go       same pattern (user-owned)
+internal/mcpapp/resources/<resource>.go   same pattern (user-owned)
+mcpgen.json                               single source of truth (version 1)
+.mcpgen/manifest.json                     ownership + sha256 manifest
+Makefile, .github/workflows/ci.yml        CI incl. conformance gate
+server.json                               MCP Registry descriptor (OCI package block)
+Dockerfile                                OCI image build
+AGENTS.md, README.md
+```
 
-## What happens after generation
+Ownership rules: mcpgen-owned files carry `DO NOT EDIT region: mcpgen-owned`;
+handler/prompt/resource files are user-owned and never overwritten (tracked via
+the manifest). Re-running `mcpgen new --force` on a project regenerates
+mcpgen-owned files but skips anything modified since generation. `mcpgen add`
+inserts registrations into the marker regions using `go/parser` + `go/format`,
+never regex.
 
-MCPGEN runs a quick sanity pipeline in this order:
+## Verification
 
-- `go mod tidy`
-- `gofmt -w .`
-- `go vet ./...`
-- `go test ./...`
+`mcpgen check` runs, in order: `config` (validate mcpgen.json), `tidy` (incl.
+SDK pin check), `fmt`, `vet`, `build`, `test -race`, `conformance` (official
+`@modelcontextprotocol/conformance` suite against a loopback instance when
+node/npx are present and transport is http; protocol-level scenarios gate,
+fixture scenarios are reported as n/a), and optionally `inspector` (Inspector
+v2 CLI smoke). Every stage is reported in the envelope; failures carry a `fix`
+with the first error's file:line.
 
-If everything passes, it runs the inspector checks for any enabled features.
+## MCP server mode
 
-## Customize
+```sh
+mcpgen mcp   # stdio MCP server exposing mcpgen_new / mcpgen_add / mcpgen_check / mcpgen_schema
+```
 
-Start by editing:
+Same code path as the CLI — the two can never diverge.
 
-- `internal/mcpapp/tools/handlers/handlers.go`
-- `internal/mcpapp/prompts/prompts.go`
-- `internal/mcpapp/resources/resources.go`
+## Development
 
-Replace the stub logic with your real implementation.
+```sh
+make check    # tidy, fmt, vet, test -race
+make golden   # regenerate golden snapshots (UPDATE_GOLDEN=1)
+```
 
-## Notes
+CI runs unit + golden tests, then the generate-and-verify matrix: each template
+permutation is generated into a temp dir and pushed through `mcpgen check`,
+including the conformance suite for http — catching SDK/spec drift the day it
+lands.
 
-- Default transport is **stdio** (best for local tools).
-- You can switch to HTTP in the setup flow if you want a networked server.
+## License
 
-## Screenshots
-
-<img src="https://github.com/user-attachments/assets/d572ffc7-aa04-48d4-a047-62f38d0c16d2" width="400" />
-<img src="https://github.com/user-attachments/assets/4bb1e652-6a9c-4bd1-9abf-5637bbf2b3f9" width="300" style="margin-bottom: 10px;" />
-<img src="https://github.com/user-attachments/assets/dab94556-37a0-4adf-b41c-a1ef409d3e2a" width="300" style="margin-bottom: 10px;" />
-<img src="https://github.com/user-attachments/assets/874b8fae-a131-41b8-ab90-d382d46ce84d" width="300" style="margin-bottom: 10px;" />
-
-## TODO
-
- - unit tests
- - package API
- - generate middleware
- - generate http wrapper
+MIT

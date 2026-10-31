@@ -78,8 +78,62 @@ jobs:
       - name: Run tests
         run: go test -race -count=1 -v -coverprofile=coverage.out ./...
 
+      - name: Validate mcpgen schema and config schema self-consistency
+        run: go test -count=1 ./internal/cli ./internal/config -run 'Schema' -v
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@v7
+        with:
+          version: latest
+
+      - name: Goreleaser dry-run
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          version: latest
+          args: release --snapshot --clean
+
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: alesr/mcpgen
+
+  # Generate-and-verify matrix: every permutation is generated into a temp
+  # dir and pushed through the full check pipeline (build, vet, test, and the
+  # MCP conformance suite for http). Catches SDK/spec drift immediately.
+  generate-and-verify:
+    name: Generate and verify
+    needs: [deps, fmt, vet, test]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: stdio-default
+            args: --transport stdio
+          - name: http-full
+            args: --transport http --port 9090
+          - name: http-latest-only
+            args: --transport http --protocol latest-only --features tasks,skills,oauth
+          - name: stdio-empty
+            args: --transport stdio --no-stubs
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Build mcpgen
+        run: go build -o /tmp/mcpgen .
+
+      - name: Generate project
+        run: /tmp/mcpgen new /tmp/gen/${{ matrix.name }} --name ${{ matrix.name }} --module example.com/${{ matrix.name }} ${{ matrix.args }} --no-check --json
+
+      - name: Check project (build, vet, test, conformance)
+        run: /tmp/mcpgen check /tmp/gen/${{ matrix.name }} --json
