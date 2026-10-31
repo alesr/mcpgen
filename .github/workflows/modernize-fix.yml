@@ -1,0 +1,20 @@
+name: Modernize fix
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  modernize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: alesr/gomodern@v0.4.2
+        with:
+          mode: fix
+          packages: ./...
+          create-pr: "true"
+          pr-title: "Modernize codebase syntax"
+          commit-message: "Apply gomodern AST rewrites"

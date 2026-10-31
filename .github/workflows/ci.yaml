@@ -63,6 +63,17 @@ jobs:
       - name: Run go vet
         run: go vet ./...
 
+  modernize:
+    name: Modernize
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: alesr/gomodern@v0.4.2
+        with:
+          mode: check
+          packages: ./...
+
   test:
     name: Test
     needs: deps
