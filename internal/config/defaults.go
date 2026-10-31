@@ -10,8 +10,7 @@ import (
 
 const (
 	DefaultServerName        = "example-mcp"
-	DefaultServerTitle       = DefaultServerName
-	DefaultServerVersion     = "v0.1.0"
+	DefaultServerVersion     = "0.1.0"
 	DefaultServerModule      = "example.com/example-mcp"
 	DefaultServerDescription = "Generated MCP server."
 
@@ -24,11 +23,10 @@ const (
 	DefaultPromptID   = "welcome"
 	DefaultResourceID = "readme"
 
-	DefaultPromptTemplate = "Welcome!"
-	DefaultResourceText   = "Welcome to your MCP server."
+	DefaultResourceMIMEType = "text/plain"
+	DefaultResourceText     = "Welcome to your MCP server."
 
 	defaultModuleHost = "example.com"
-	defaultPromptRole = "user"
 
 	defaultJSONSchemaObject = `{"type":"object"}`
 
@@ -42,7 +40,8 @@ const (
 
 var nonModuleChar = regexp.MustCompile(`[^a-z0-9-]+`)
 
-func defaultModulePath(name string) string {
+// DefaultModulePath derives a default Go module path from a server name.
+func DefaultModulePath(name string) string {
 	if strings.TrimSpace(name) == "" {
 		return DefaultServerModule
 	}
@@ -62,58 +61,81 @@ func defaultModulePath(name string) string {
 	return path
 }
 
-func defaultToolTitle(id string) string {
+func DefaultToolTitle(id string) string {
 	if strings.EqualFold(id, DefaultToolID) {
 		return defaultGreetTitle
 	}
 	return utils.TitleCaseID(id)
 }
 
-func defaultToolDescription(id string) string {
+func DefaultToolDescription(id string) string {
 	if strings.EqualFold(id, DefaultToolID) {
 		return defaultGreetDescription
 	}
 	return "Tool stub for " + id + "."
 }
 
-func defaultResourceTitle(id string) string {
+func DefaultResourceTitle(id string) string {
 	if strings.EqualFold(id, DefaultResourceID) {
 		return defaultReadmeTitle
 	}
 	return utils.TitleCaseID(id)
 }
 
-func defaultResourceDescription(id string) string {
+func DefaultResourceDescription(id string) string {
 	if strings.EqualFold(id, DefaultResourceID) {
 		return defaultReadmeDescription
 	}
 	return "Resource stub for " + id + "."
 }
 
-func defaultResourceTextForID(id string) string {
+func DefaultResourceTextForID(id string) string {
 	if strings.EqualFold(id, DefaultResourceID) {
 		return DefaultResourceText
 	}
 	return "This is the " + id + " stub."
 }
 
-func defaultPromptTitle(id string) string {
+func DefaultPromptTitle(id string) string {
 	if strings.EqualFold(id, DefaultPromptID) {
 		return defaultWelcomeTitle
 	}
 	return utils.TitleCaseID(id)
 }
 
-func defaultPromptDescription(id string) string {
+func DefaultPromptDescription(id string) string {
 	if strings.EqualFold(id, DefaultPromptID) {
 		return defaultWelcomeDescription
 	}
 	return "Prompt stub for " + id + "."
 }
 
-func defaultPromptTemplateForID(id string) string {
-	if strings.EqualFold(id, DefaultPromptID) {
-		return DefaultPromptTemplate
+// DefaultConfig returns a config with the default tool, prompt, and resource
+// stubs enabled, mirroring the interactive flow defaults.
+func DefaultConfig(transport string, port int, withTool, withResource, withPrompt bool) *Config {
+	cfg := &Config{
+		Version: ConfigVersion,
+		Server: Server{
+			Name:    DefaultServerName,
+			Version: DefaultServerVersion,
+			Module:  DefaultServerModule,
+		},
+		Transport: Transport{
+			Type:     strings.ToLower(strings.TrimSpace(transport)),
+			HTTPPort: port,
+		},
+		Protocol: ProtocolCompat,
 	}
-	return "Prompt " + id + " stub"
+
+	if withTool {
+		cfg.Tools = append(cfg.Tools, Tool{ID: DefaultToolID, ReadOnly: true})
+	}
+	if withPrompt {
+		cfg.Prompts = append(cfg.Prompts, Prompt{ID: DefaultPromptID})
+	}
+	if withResource {
+		res := Resource{ID: DefaultResourceID, URI: "file:///" + DefaultResourceID, Text: DefaultResourceText}
+		cfg.Resources = append(cfg.Resources, res)
+	}
+	return cfg
 }
