@@ -12,7 +12,7 @@
     },
     "AGENTS.md": {
       "owner": "mcpgen",
-      "sha256": "22a3488885aa524931088f89b4a42d7d3181676ccb9f7dde5d7f7817f546553e"
+      "sha256": "d3af488f34b7e357cf5a82a03bea6171ea371ea6e4e6254ad83366f625513aba"
     },
     "Dockerfile": {
       "owner": "mcpgen",
@@ -24,11 +24,11 @@
     },
     "README.md": {
       "owner": "mcpgen",
-      "sha256": "7d8b852b3b19f24e56dade070f8f2ef01d183743bad9e4ba70a1050ac36ac73b"
+      "sha256": "a985190235c4cc56ab1c529c021783ab0f91be172e7fc70e6e40db25e7e2fc62"
     },
     "cmd/bare/main.go": {
       "owner": "mcpgen",
-      "sha256": "9184c87b4080c81d00967c7a1aea5ad2f57be57367266fb35ff99b5aefe567d5"
+      "sha256": "76af3418ab537da8a24536b2b5e2f3ae456e571db0f7981e142d0587a506b8c1"
     },
     "go.mod": {
       "owner": "mcpgen",
@@ -40,7 +40,7 @@
     },
     "internal/mcpapp/mcpapp.go": {
       "owner": "mcpgen",
-      "sha256": "460fbb0c86ae036babc24fcf856806ebd8aa96f68653a77f85eb3cd889f7f127"
+      "sha256": "9ee9ab17d2339edc4d79970825502afe807a074f07779a8a68e657faf7b538da"
     },
     "internal/mcpapp/prompts.go": {
       "owner": "mcpgen",

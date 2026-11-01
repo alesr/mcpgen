@@ -16,7 +16,7 @@ import (
 // markers; if you do, mcpgen refuses to add capabilities until they are restored.
 func registerTools(server *mcp.Server) {
 	// mcpgen:begin tools
-	server.AddTool(&mcp.Tool{
+	mcp.AddTool(server, &mcp.Tool{
 		Name:         "greet",
 		Title:        "Greet",
 		Description:  "Greets a user with a short welcome.",
@@ -27,7 +27,7 @@ func registerTools(server *mcp.Server) {
 			IdempotentHint: false,
 		},
 	}, handlers.Greet)
-	server.AddTool(&mcp.Tool{
+	mcp.AddTool(server, &mcp.Tool{
 		Name:         "get_forecast",
 		Title:        "Get Forecast",
 		Description:  "Get the forecast for a city.",

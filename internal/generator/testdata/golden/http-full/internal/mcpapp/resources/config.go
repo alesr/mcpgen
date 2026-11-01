@@ -9,12 +9,14 @@ import (
 
 // Config implements the "config" resource template.
 //
-// TODO: replace the stub with real content.
-func Config(ctx context.Context, req *mcp.ReadResourceRequest) (*mcp.ReadResourceResult, error) {
-	_ = ctx
+// TODO: extract the URI template variables (name)
+// from req.Params.URI (matched against "file:///config/{name}") and return real
+// content. The SDK fills in the resource URI and MIME type on the returned
+// contents, so only the payload needs to be set here.
+func Config(_ context.Context, _ *mcp.ReadResourceRequest) (*mcp.ReadResourceResult, error) {
 	return &mcp.ReadResourceResult{
 		Contents: []*mcp.ResourceContents{
-			{URI: req.Params.URI, MIMEType: "application/json", Text: "{}"},
+			{Text: "{}"},
 		},
 	}, nil
 }

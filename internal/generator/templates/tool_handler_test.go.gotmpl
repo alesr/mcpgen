@@ -10,18 +10,11 @@ import (
 
 func Test{{ .GoName }}(t *testing.T) {
 	t.Parallel()
-	res, err := {{ .GoName }}(context.Background(), &mcp.CallToolRequest{Params: &mcp.CallToolParamsRaw{Name: {{ quote .ID }}}})
+	_, out, err := {{ .GoName }}(context.Background(), &mcp.CallToolRequest{
+		Params: &mcp.CallToolParamsRaw{Name: {{ quote .ID }}},
+	}, {{ .GoName }}Input{})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if res == nil {
-		t.Fatal("expected result")
-	}
-	if len(res.Content) == 0 {
-		t.Fatal("expected content")
-	}
-	text, ok := res.Content[0].(*mcp.TextContent)
-	if !ok || text.Text == "" {
-		t.Fatal("expected non-empty text content")
-	}
+	_ = out
 }

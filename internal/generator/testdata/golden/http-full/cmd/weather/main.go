@@ -2,18 +2,35 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"flag"
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/acme/weather/internal/mcpapp"
 )
 
 func main() {
 	logger := slog.Default()
+	if err := run(logger); err != nil {
+		logger.Error("server stopped", "error", err)
+		os.Exit(1)
+	}
+}
+
+// run starts the MCP server over streamable HTTP and blocks until the process
+// receives an interrupt/termination signal, then shuts down gracefully.
+func run(logger *slog.Logger) error {
 	addr := flag.String("addr", ":9090", "listen address")
 	flag.Parse()
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
 	server := mcpapp.NewServer(logger)
 
@@ -24,9 +41,22 @@ func main() {
 		_, _ = w.Write([]byte("ok"))
 	})
 
-	logger.Info("starting MCP server", "addr", *addr, "transport", "http")
-	if err := http.ListenAndServe(*addr, mux); err != nil {
-		logger.Error("server stopped", "error", err)
-		os.Exit(1)
+	srv := &http.Server{
+		Addr:              *addr,
+		Handler:           mux,
+		ReadHeaderTimeout: 10 * time.Second,
 	}
+
+	go func() {
+		<-ctx.Done()
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		_ = srv.Shutdown(shutdownCtx)
+	}()
+
+	logger.Info("starting MCP server", "addr", *addr, "transport", "http")
+	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		return err
+	}
+	return nil
 }

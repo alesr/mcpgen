@@ -122,6 +122,13 @@ Flags: `--json`, `--conformance` / `--no-conformance`, `--inspector`, `--timeout
 └── AGENTS.md, README.md, .gitignore
 ```
 
+Tool handlers use the go-sdk's typed `mcp.AddTool[In, Out]` API: each `<tool>.go`
+scaffolds `<Tool>Input`/`<Tool>Output` structs from the tool's JSON Schema, and
+the SDK validates and unmarshals arguments before the handler runs. Tool errors
+returned by a handler become `isError` results the model can see, rather than
+protocol errors. Schemas in `mcpgen.json` are the source of truth and are
+validated against JSON Schema draft **2020-12** (the draft the SDK implements).
+
 Ownership rules:
 
 - mcpgen-owned files carry a `DO NOT EDIT region: mcpgen-owned` header. User-owned handler/prompt/resource files are never overwritten (the only exception is `add --force`).

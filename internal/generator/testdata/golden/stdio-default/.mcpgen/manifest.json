@@ -12,7 +12,7 @@
     },
     "AGENTS.md": {
       "owner": "mcpgen",
-      "sha256": "8e65c93b268a25d2a511245f6da79429a3050c46590f58fb7950ca060f6be9b6"
+      "sha256": "23b506477440bf6cee631d7adec3458b426606e1fcd71d2f49b8c8c354b0349b"
     },
     "Dockerfile": {
       "owner": "mcpgen",
@@ -24,11 +24,11 @@
     },
     "README.md": {
       "owner": "mcpgen",
-      "sha256": "e46ad1e24025c2123f75e07466bcdbc46c6f1f0547673657f89aeda393e1a20a"
+      "sha256": "80b8311e1aad8aee32b22c3353bc8000153fa13fe172af3271bdf876d6ffb6d6"
     },
     "cmd/weather/main.go": {
       "owner": "mcpgen",
-      "sha256": "2a1420cd0e837e78d7cb40eb91b0655085a3c4bf1fc1a4575389e849f4cc3fda"
+      "sha256": "3f1e2a0a6cfe9c22e5ee9e33a013ed5e56f642f0d133ed793e0f95f5a9db17e4"
     },
     "go.mod": {
       "owner": "mcpgen",
@@ -40,7 +40,7 @@
     },
     "internal/mcpapp/mcpapp.go": {
       "owner": "mcpgen",
-      "sha256": "e07ffed91e2fe797a96532e9cf670dd0948c7c72ae1335697d38d11f7b142fda"
+      "sha256": "43442b3c8bf4e37e533b7b192d4026eadee5d3257017a07c4dad757998a4ef0e"
     },
     "internal/mcpapp/prompts.go": {
       "owner": "mcpgen",
@@ -68,7 +68,7 @@
     },
     "internal/mcpapp/resources/readme.go": {
       "owner": "user",
-      "sha256": "e9c9fad2ee108c1cda68bf3d246be3b56342b312b84cae0f52d4042f8462ebd0"
+      "sha256": "e58149a768d4c418578d8d9ef423ceaa6332dc65e294bdc5a59893c9ce310478"
     },
     "internal/mcpapp/resources/readme_test.go": {
       "owner": "user",
@@ -76,7 +76,7 @@
     },
     "internal/mcpapp/tools.go": {
       "owner": "mcpgen",
-      "sha256": "4c62eb6f20bf384d815035ac086946f4acd78d699697d125025b367c75fb8ff8"
+      "sha256": "bb9bafc99bfad7eec853a059e17b272c94381f5fefc21acee69d29d9201b67bc"
     },
     "internal/mcpapp/tools/handlers/doc.go": {
       "owner": "mcpgen",
@@ -84,11 +84,11 @@
     },
     "internal/mcpapp/tools/handlers/greet.go": {
       "owner": "user",
-      "sha256": "a799670732cf5399a9fe33445c2b1196b3090fda046fa8e08f4227a0293342ce"
+      "sha256": "a581f12077e3cee0cd1d17ef247b09b8835b63c9b1bb8a244a7c9777ee1cfaac"
     },
     "internal/mcpapp/tools/handlers/greet_test.go": {
       "owner": "user",
-      "sha256": "aa913d9b4395586dcce5a9e7840d354841b941a4cd1d0510945c3d14aa27ebe4"
+      "sha256": "6559264ab8978d3826f24c242f113da01e0818158d1095d5def32da871cbf762"
     },
     "mcpgen.json": {
       "owner": "mcpgen",

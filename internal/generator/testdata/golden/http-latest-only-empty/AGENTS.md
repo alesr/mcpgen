@@ -46,6 +46,27 @@ mcpgen add resource resources/my_resource.json --dir . --json
 
 Then implement the stub in the new user-owned file.
 
+## Implementing a tool handler
+
+Tool handlers use the SDK's typed `mcp.AddTool[In, Out]` API. Each generated
+handler file defines `<Tool>Input` and `<Tool>Output` structs scaffolded from the
+tool's JSON Schema, plus a handler:
+
+```go
+func Greet(_ context.Context, _ *mcp.CallToolRequest, in GreetInput) (*mcp.CallToolResult, GreetOutput, error) {
+    return nil, GreetOutput{ /* ... */ }, nil
+}
+```
+
+- Arguments are validated against `inputSchema` and unmarshaled into `in`
+  before the handler runs; return the typed output directly.
+- Return a non-nil error for a tool-level failure; the SDK converts it into an
+  `isError` result the model can see (never a protocol error).
+- The schema in `mcpgen.json` is the source of truth. It is validated with the
+  SDK's JSON Schema support, which implements draft **2020-12** — write tool
+  schemas against that draft. The generated structs are only a scaffold:
+  editing a schema in `mcpgen.json` does not rewrite user-owned handler files.
+
 ## Verify until green
 
 ```sh
