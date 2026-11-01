@@ -17,11 +17,10 @@ jobs:
       - uses: actions/checkout@v4
 
       # ultimate-ci runs lint, modernize, govulncheck, tidy, and race-enabled
-      # tests with coverage in parallel. Pinned to a commit SHA because the
-      # action has no v1 tag yet.
+      # tests with coverage in parallel.
       - name: Ultimate Go CI
         id: ci
-        uses: alesr/ultimate-ci@0c6c5969c5ab41d9eeb7d6486c48f433625795f9
+        uses: alesr/ultimate-ci@v1
         with:
           go-version-file: go.mod
 
