@@ -10,26 +10,32 @@ permissions:
   contents: read
 
 jobs:
-  deps:
-    name: Dependencies
+  quality:
+    name: Quality
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-go@v5
+      # ultimate-ci runs lint, modernize, govulncheck, tidy, and race-enabled
+      # tests with coverage in parallel. Pinned to a commit SHA because the
+      # action has no v1 tag yet.
+      - name: Ultimate Go CI
+        id: ci
+        uses: alesr/ultimate-ci@0c6c5969c5ab41d9eeb7d6486c48f433625795f9
         with:
           go-version-file: go.mod
-          cache: true
 
-      - name: Download modules
-        run: go mod download
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: alesr/mcpgen
+          files: ${{ steps.ci.outputs.test-coverage-file }}
 
-      - name: Verify go.sum
-        run: go mod verify
-
+  # golangci-lint defaults do not include gofmt and the repo has no golangci
+  # config, so keep an explicit formatting gate.
   fmt:
     name: Format
-    needs: deps
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -48,9 +54,9 @@ jobs:
             exit 1
           fi
 
-  vet:
-    name: Vet
-    needs: deps
+  goreleaser:
+    name: Goreleaser dry-run
+    needs: quality
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -59,43 +65,6 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
-
-      - name: Run go vet
-        run: go vet ./...
-
-  modernize:
-    name: Modernize
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: alesr/gomodern@v0.4.2
-        with:
-          mode: check
-          packages: ./...
-
-  test:
-    name: Test
-    needs: deps
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-          cache: true
-
-      - name: Run tests
-        run: go test -race -count=1 -v -coverprofile=coverage.out ./...
-
-      - name: Validate mcpgen schema and config schema self-consistency
-        run: go test -count=1 ./internal/cli ./internal/config -run 'Schema' -v
-
-      - name: Lint
-        uses: golangci/golangci-lint-action@v7
-        with:
-          version: latest
 
       - name: Goreleaser dry-run
         uses: goreleaser/goreleaser-action@v6
@@ -103,18 +72,12 @@ jobs:
           version: latest
           args: release --snapshot --clean
 
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          slug: alesr/mcpgen
-
   # Generate-and-verify matrix: every permutation is generated into a temp
   # dir and pushed through the full check pipeline (build, vet, test, and the
   # MCP conformance suite for http). Catches SDK/spec drift immediately.
   generate-and-verify:
     name: Generate and verify
-    needs: [deps, fmt, vet, test]
+    needs: [quality, fmt]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

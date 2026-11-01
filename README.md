@@ -214,7 +214,7 @@ make check     # go mod tidy, gofmt, go vet, go test -race
 make golden    # regenerate golden snapshots (UPDATE_GOLDEN=1)
 ```
 
-CI runs unit + golden tests with `-race` and coverage, fmt/vet/gomodernize gates, golangci-lint, and a goreleaser snapshot — then a generate-and-verify matrix (`stdio-default`, `http-full`, `http-latest-only` with `tasks,skills,oauth`, `stdio-empty`): each permutation is generated into a temp dir and pushed through `mcpgen check`, including the conformance suite for http, so SDK/spec drift fails CI the day it lands. Releases are goreleaser-built binaries for linux/darwin/windows, tagged `vX.Y.Z` (the version is stamped via `-ldflags`). The `generated/` directory is a checked-in sample project regenerated with `mcpgen new`.
+CI runs the [`ultimate-ci`](https://github.com/marketplace/actions/ultimate-go-ci) GitHub Action: golangci-lint, modernize, govulncheck, tidy, and race-enabled unit + golden tests with coverage, all in parallel — plus an explicit gofmt gate, a goreleaser snapshot, and a generate-and-verify matrix (`stdio-default`, `http-full`, `http-latest-only` with `tasks,skills,oauth`, `stdio-empty`): each permutation is generated into a temp dir and pushed through `mcpgen check`, including the conformance suite for http, so SDK/spec drift fails CI the day it lands. Releases are goreleaser-built binaries for linux/darwin/windows, tagged `vX.Y.Z` (the version is stamped via `-ldflags`). The `generated/` directory is a checked-in sample project regenerated with `mcpgen new`.
 
 ## License
 
