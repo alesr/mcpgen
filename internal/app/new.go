@@ -237,9 +237,12 @@ func runInteractiveNew(stdin *os.File, stdout, stderr io.Writer) int {
 		GeneratorVersion: Version,
 	})
 	if err != nil {
-		env := envelopeErr(err, []string{"mcpgen check " + res.Dir + " --json"})
+		var env cli.Envelope
 		if res != nil {
+			env = envelopeErr(err, []string{"mcpgen check " + res.Dir + " --json"})
 			env.Result = res
+		} else {
+			env = envelopeErr(err, nil)
 		}
 		return emit(stdout, stderr, false, env)
 	}
