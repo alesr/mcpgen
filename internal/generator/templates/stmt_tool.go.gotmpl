@@ -1,4 +1,4 @@
-server.AddTool(&mcp.Tool{
+mcp.AddTool(server, &mcp.Tool{
 	Name:         {{ quote .ID }},
 	Title:        {{ quote .Title }},
 	Description:  {{ quote .Description }},

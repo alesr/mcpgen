@@ -3,29 +3,26 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
+type GetForecastInput struct {
+	City string `json:"city"`
+}
+
+type GetForecastOutput struct{}
+
 // GetForecast implements the "get_forecast" tool.
 //
-// TODO: replace the stub with real logic. Unmarshal req.Params.Arguments
-// against the tool's input schema as needed.
-func GetForecast(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	_ = ctx
-	_ = req
-	payload := map[string]any{
-		"tool":    "get_forecast",
-		"status":  "ok",
-		"message": "stub response from get_forecast",
-	}
-	data, err := json.Marshal(payload)
-	if err != nil {
-		return nil, err
-	}
-	return &mcp.CallToolResult{
-		StructuredContent: payload,
-		Content:           []mcp.Content{&mcp.TextContent{Text: string(data)}},
-	}, nil
+// The SDK validates the arguments against the tool's input schema and
+// unmarshals them into the typed input before calling this handler. Return a
+// non-nil error to report a tool-level failure; the SDK converts it into an
+// "isError" result the client can surface to the model.
+//
+// TODO: replace the stub with real logic using the typed input and returning a
+// typed output.
+func GetForecast(_ context.Context, _ *mcp.CallToolRequest, in GetForecastInput) (*mcp.CallToolResult, GetForecastOutput, error) {
+	_ = in
+	return nil, GetForecastOutput{}, nil
 }

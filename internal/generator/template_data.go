@@ -47,8 +47,12 @@ type ToolData struct {
 	Description      string
 	InputSchema      string
 	OutputSchema     string
-	ReadOnly         bool
-	Idempotent       bool
+	// InputStruct/OutputStruct are generated Go type definitions (e.g.
+	// "type GreetInput struct { ... }") scaffolded from InputSchema/OutputSchema.
+	InputStruct  string
+	OutputStruct string
+	ReadOnly     bool
+	Idempotent   bool
 }
 
 type PromptData struct {
@@ -64,6 +68,7 @@ type PromptData struct {
 
 type PromptArgData struct {
 	Name        string
+	GoName      string
 	Title       string
 	Description string
 	Required    bool
@@ -82,6 +87,9 @@ type ResourceData struct {
 	Text             string
 	TestURI          string
 	IsTemplate       bool
+	// TemplateVars are the {name}-style variables in URITemplate, listed in the
+	// generated stub's TODO so users know what to extract from the request URI.
+	TemplateVars []string
 }
 
 // BuildTemplateData converts a validated config into template data, rejecting
@@ -125,6 +133,8 @@ func BuildTemplateData(cfg *config.Config, generatorVersion string) (TemplateDat
 			Description:      t.Description,
 			InputSchema:      config.NormalizeJSONSchema(t.InputSchema),
 			OutputSchema:     config.NormalizeJSONSchema(t.OutputSchema),
+			InputStruct:      structDef(utils.GoIdent(t.ID)+"Input", config.NormalizeJSONSchema(t.InputSchema)),
+			OutputStruct:     structDef(utils.GoIdent(t.ID)+"Output", config.NormalizeJSONSchema(t.OutputSchema)),
 			ReadOnly:         t.ReadOnly,
 			Idempotent:       t.Idempotent,
 		}
@@ -161,6 +171,7 @@ func BuildTemplateData(cfg *config.Config, generatorVersion string) (TemplateDat
 		for _, arg := range p.Arguments {
 			pd.Arguments = append(pd.Arguments, PromptArgData{
 				Name:        arg.Name,
+				GoName:      utils.GoIdent(arg.Name),
 				Title:       arg.Title,
 				Description: arg.Description,
 				Required:    arg.Required,
@@ -192,6 +203,7 @@ func BuildTemplateData(cfg *config.Config, generatorVersion string) (TemplateDat
 			Text:             r.Text,
 			TestURI:          testURI,
 			IsTemplate:       r.URITemplate != "",
+			TemplateVars:     uriTemplateVars(r.URITemplate),
 		}
 		if prev, ok := resIdents[rd.GoName]; ok {
 			return TemplateData{}, fmt.Errorf("resource ids %q and %q both map to Go identifier %s", prev, r.ID, rd.GoName)
@@ -205,6 +217,32 @@ func BuildTemplateData(cfg *config.Config, generatorVersion string) (TemplateDat
 	}
 
 	return data, nil
+}
+
+// uriTemplateVars returns the ordered list of {name}-style variables in an
+// RFC 6570 URI template, used only to populate the generated stub's TODO.
+func uriTemplateVars(tmpl string) []string {
+	var vars []string
+	seen := map[string]bool{}
+	for i := 0; i < len(tmpl); {
+		open := strings.IndexByte(tmpl[i:], '{')
+		if open < 0 {
+			break
+		}
+		open += i
+		close := strings.IndexByte(tmpl[open:], '}')
+		if close < 0 {
+			break
+		}
+		close += open
+		name := strings.TrimSpace(tmpl[open+1 : close])
+		if name != "" && !seen[name] {
+			seen[name] = true
+			vars = append(vars, name)
+		}
+		i = close + 1
+	}
+	return vars
 }
 
 // registryNames derives the MCP Registry server name (reverse-DNS of the

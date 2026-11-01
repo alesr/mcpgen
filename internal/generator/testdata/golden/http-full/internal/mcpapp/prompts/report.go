@@ -9,6 +9,22 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
+// ReportArgs holds the typed arguments for the "report" prompt.
+type ReportArgs struct {
+	Topic string
+}
+
+// parseReportArgs converts the raw prompt arguments to ReportArgs,
+// validating required arguments.
+func parseReportArgs(args map[string]string) (ReportArgs, error) {
+	var out ReportArgs
+	out.Topic = args["topic"]
+	if out.Topic == "" {
+		return out, fmt.Errorf("missing required argument %q", "topic")
+	}
+	return out, nil
+}
+
 // Report implements the "report" prompt.
 //
 // TODO: replace the stub with real prompt logic.
@@ -18,12 +34,13 @@ func Report(ctx context.Context, req *mcp.GetPromptRequest) (*mcp.GetPromptResul
 	if args == nil {
 		args = map[string]string{}
 	}
-	if _, ok := args["topic"]; !ok {
-		return nil, fmt.Errorf("missing required argument %q", "topic")
+	typed, err := parseReportArgs(args)
+	if err != nil {
+		return nil, err
 	}
 	var sb strings.Builder
 	sb.WriteString("Build a report.")
-	sb.WriteString("\n- " + "topic" + ": " + args["topic"])
+	sb.WriteString("\n- " + "topic" + ": " + typed.Topic)
 	return &mcp.GetPromptResult{
 		Description: "Build a report.",
 		Messages: []*mcp.PromptMessage{

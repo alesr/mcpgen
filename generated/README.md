@@ -35,6 +35,24 @@ mcpgen add tool spec.json    # add a capability without touching registration fi
 - `mcpgen.json` — single source of truth (tools, prompts, resources, features)
 - `server.json` — MCP Registry descriptor (OCI package block)
 
+## Writing tools
+
+Each tool is implemented as a typed handler using the SDK's `mcp.AddTool[In, Out]`
+API. The generated `<tool>.go` file scaffolds `<Tool>Input` / `<Tool>Output`
+structs from the tool's JSON Schema, plus a handler:
+
+```go
+func Greet(_ context.Context, _ *mcp.CallToolRequest, in GreetInput) (*mcp.CallToolResult, GreetOutput, error) {
+    return nil, GreetOutput{ /* ... */ }, nil
+}
+```
+
+- Arguments are validated against `inputSchema` and unmarshaled automatically.
+- Return a non-nil error to report a tool failure as an `isError` result the
+  model can see (not a protocol error).
+- Schemas in `mcpgen.json` are the source of truth and are validated against
+  JSON Schema draft **2020-12** (the draft the SDK implements).
+
 ## Security checklist
 
 Before exposing this server beyond localhost:

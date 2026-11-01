@@ -3,17 +3,32 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"example.com/example-mcp/internal/mcpapp"
 )
 
 func main() {
 	logger := slog.Default()
-	server := mcpapp.NewServer(logger)
-	if err := mcpapp.RunStdio(context.Background(), server); err != nil {
+	if err := run(logger); err != nil {
 		logger.Error("server stopped", "error", err)
 		os.Exit(1)
 	}
+}
+
+// run starts the MCP server over stdio and blocks until the connection closes
+// or the process receives an interrupt/termination signal.
+func run(logger *slog.Logger) error {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	server := mcpapp.NewServer(logger)
+	if err := mcpapp.RunStdio(ctx, server); err != nil && !errors.Is(err, context.Canceled) {
+		return err
+	}
+	return nil
 }

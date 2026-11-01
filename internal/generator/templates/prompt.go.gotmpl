@@ -11,6 +11,33 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
+{{- if .Arguments }}
+
+// {{ .GoName }}Args holds the typed arguments for the "{{ .ID }}" prompt.
+type {{ .GoName }}Args struct {
+{{- range .Arguments }}
+	{{ .GoName }} string
+{{- end }}
+}
+
+// parse{{ .GoName }}Args converts the raw prompt arguments to {{ .GoName }}Args,
+// validating required arguments.
+func parse{{ .GoName }}Args(args map[string]string) ({{ .GoName }}Args, error) {
+	var out {{ .GoName }}Args
+{{- range .Arguments }}
+	out.{{ .GoName }} = args[{{ quote .Name }}]
+{{- end }}
+{{- range .Arguments }}
+{{- if .Required }}
+	if out.{{ .GoName }} == "" {
+		return out, fmt.Errorf("missing required argument %q", {{ quote .Name }})
+	}
+{{- end }}
+{{- end }}
+	return out, nil
+}
+{{- end }}
+
 // {{ .GoName }} implements the "{{ .ID }}" prompt.
 //
 // TODO: replace the stub with real prompt logic.
@@ -20,17 +47,16 @@ func {{ .GoName }}(ctx context.Context, req *mcp.GetPromptRequest) (*mcp.GetProm
 	if args == nil {
 		args = map[string]string{}
 	}
-{{- range .Arguments }}
-{{- if .Required }}
-	if _, ok := args[{{ quote .Name }}]; !ok {
-		return nil, fmt.Errorf("missing required argument %q", {{ quote .Name }})
+{{- if .Arguments }}
+	typed, err := parse{{ .GoName }}Args(args)
+	if err != nil {
+		return nil, err
 	}
-{{- end }}
 {{- end }}
 	var sb strings.Builder
 	sb.WriteString({{ quote .Description }})
 {{- range .Arguments }}
-	sb.WriteString("\n- " + {{ quote .Name }} + ": " + args[{{ quote .Name }}])
+	sb.WriteString("\n- " + {{ quote .Name }} + ": " + typed.{{ .GoName }})
 {{- end }}
 	return &mcp.GetPromptResult{
 		Description: {{ quote .Description }},

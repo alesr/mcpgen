@@ -21,7 +21,7 @@ import (
 func registerTools(server *mcp.Server) {
 	// mcpgen:begin tools
 {{- range .Tools }}
-	server.AddTool(&mcp.Tool{
+	mcp.AddTool(server, &mcp.Tool{
 		Name:         {{ quote .ID }},
 		Title:        {{ quote .Title }},
 		Description:  {{ quote .Description }},

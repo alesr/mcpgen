@@ -11,12 +11,10 @@ import (
 )
 
 // NewServer builds the MCP server and registers tools, prompts, and resources.
+//
+// A nil logger is replaced by the SDK with a discard logger; pass a non-nil
+// logger to observe server activity.
 func NewServer(logger *slog.Logger) *mcp.Server {
-	if logger == nil {
-		logger = slog.Default()
-	}
-	_ = logger
-
 	impl := &mcp.Implementation{
 		Name:    {{ quote .ServerName }},
 		Version: {{ quote .Version }},
@@ -25,6 +23,7 @@ func NewServer(logger *slog.Logger) *mcp.Server {
 
 	opts := &mcp.ServerOptions{
 		Instructions: Instructions,
+		Logger:       logger,
 		// Default cache policy for cacheable results (server/discover, the
 		// list methods, resources/read): fresh for 60s, private scope.
 		// Adjust or remove as needed.

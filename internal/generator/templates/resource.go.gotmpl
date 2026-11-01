@@ -9,12 +9,19 @@ import (
 
 // {{ .GoName }} implements the "{{ .ID }}" resource{{ if .IsTemplate }} template{{ end }}.
 //
-// TODO: replace the stub with real content.
-func {{ .GoName }}(ctx context.Context, req *mcp.ReadResourceRequest) (*mcp.ReadResourceResult, error) {
-	_ = ctx
+{{- if .IsTemplate }}
+// TODO: extract the URI template variables{{ if .TemplateVars }} ({{ join .TemplateVars ", " }}){{ end }}
+// from req.Params.URI (matched against {{ quote .URITemplate }}) and return real
+// content. The SDK fills in the resource URI and MIME type on the returned
+// contents, so only the payload needs to be set here.
+{{- else }}
+// TODO: replace the stub with real content. The SDK fills in the resource URI
+// and MIME type on the returned contents, so only the payload needs to be set.
+{{- end }}
+func {{ .GoName }}(_ context.Context, _ *mcp.ReadResourceRequest) (*mcp.ReadResourceResult, error) {
 	return &mcp.ReadResourceResult{
 		Contents: []*mcp.ResourceContents{
-			{URI: req.Params.URI, MIMEType: {{ quote .MIMEType }}, Text: {{ quote .Text }}},
+			{Text: {{ quote .Text }}},
 		},
 	}, nil
 }
