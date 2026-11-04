@@ -1,11 +1,36 @@
 ---
 title: Quickstart
-description: Generate and verify an MCP server in 60 seconds. Every command on this page was executed against the real CLI.
+description: Generate and verify an MCP server with an AI agent or from your terminal. Every command on this page was executed against the real CLI.
 ---
 
-Generate an HTTP MCP server, then verify it until the pipeline is green. This takes about 60 seconds. Every command below was run against the real CLI; output is trimmed with `...`.
+There are two ways to use mcpgen, and both run the same code path and the same verification pipeline: let an AI agent drive it (mcpgen is itself an MCP server), or run the commands yourself. Every command below was run against the real CLI; output is trimmed with `...`.
 
-## 1. Install
+## Path 1: let an AI agent do it
+
+Install mcpgen, then add it to your MCP client (Claude Desktop, Cursor, or any MCP host):
+
+```sh
+go install github.com/alesr/mcpgen@latest
+```
+
+```json
+{ "mcpServers": { "mcpgen": { "command": "mcpgen", "args": ["mcp"] } } }
+```
+
+From there, the model does the work. It gets four tools (`mcpgen_new`, `mcpgen_add`, `mcpgen_check`, `mcpgen_schema`), discovers the contract itself with `mcpgen_schema`, scaffolds with `mcpgen_new`, and loops `mcpgen_check` until the run is green. Tool specs are passed as objects, so the model never writes temporary JSON files.
+
+Tell the agent what you want in plain language, for example: "Create a weather MCP server in Go with a forecast tool, and verify it until the checks pass."
+
+Two things to know:
+
+- The host machine needs Go 1.26 or newer. `mcpgen_check` builds and tests the generated project and fails without it.
+- mcpgen writes only inside generated projects. Implementing the handler stubs needs a filesystem tool or a shell in your client.
+
+The full walkthrough, with the four tools and their inputs, is in [drive mcpgen from agents](/mcpgen/guides/drive-from-agents/).
+
+## Path 2: run it yourself (60 seconds)
+
+### 1. Install
 
 ```sh
 go install github.com/alesr/mcpgen@latest
@@ -13,7 +38,7 @@ go install github.com/alesr/mcpgen@latest
 
 Requires Go 1.26 or newer. Node.js/npx are optional (conformance suite only).
 
-## 2. Generate a server
+### 2. Generate a server
 
 ```sh
 mcpgen new ./weather --name weather --module example.com/weather --transport http --json
@@ -49,7 +74,7 @@ Real output (trimmed):
 
 `new` runs the full verification pipeline after writing files (unless `--no-check`). Exit code is 0.
 
-## 3. Verify
+### 3. Verify
 
 ```sh
 mcpgen check ./weather --json
@@ -70,7 +95,7 @@ Human output of the same run looks like this (real output):
 
 Exit 0 means every stage passed. On failure, the JSON envelope carries `error.stage`, `error.code`, and `error.fix` with the `file:line` of the first failure.
 
-## 4. Run it
+### 4. Run it
 
 ```sh
 cd weather
@@ -78,7 +103,7 @@ go run ./cmd/weather            # listens on 127.0.0.1:8080 by default
 curl -s http://127.0.0.1:8080/healthz   # -> ok
 ```
 
-## 5. Extend
+### 5. Extend
 
 ```sh
 mcpgen add tool tools/health.json --dir ./weather --json
@@ -87,12 +112,9 @@ mcpgen check ./weather --json
 
 `add` appends the entry to `mcpgen.json`, creates the user-owned handler files, and inserts the registration into the marker region of `internal/mcpapp/tools.go`. Your files are never touched.
 
-## Prefer to let an AI do this?
-
-mcpgen is itself an MCP server, not only a CLI. Install it in your MCP client. The model can then generate, extend, and verify servers for you — see [drive mcpgen from agents](/mcpgen/guides/drive-from-agents/).
-
 ## Next steps
 
 - [Tutorial](/mcpgen/tutorial/) — the same flow with a tool, a prompt, and a resource, end to end.
+- [Drive mcpgen from agents](/mcpgen/guides/drive-from-agents/) — the agent loop in detail, for shell agents and MCP hosts.
 - [CLI reference](/mcpgen/reference/generated/cli/) — every command and flag.
 - [Machine interface](/mcpgen/reference/generated/machine-interface/) — the JSON envelope and exit codes for agents.
