@@ -1,12 +1,11 @@
 name: Release
 
 # Build and publish release binaries (see .goreleaser.yaml) when a version
-# tag is pushed or a release is published from the UI.
+# tag is pushed. Publishing a release from the UI creates the tag too, so
+# this one trigger covers both paths without running goreleaser twice.
 on:
   push:
     tags: ["v*"]
-  release:
-    types: [published]
 
 permissions:
   contents: write
