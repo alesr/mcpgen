@@ -101,7 +101,7 @@ func run(root, outDir string) error {
 func cliPage(doc *cli.SchemaDoc) []byte {
 	var b bytes.Buffer
 	fmt.Fprintf(&b, "---\ntitle: CLI commands and flags\ndescription: Every mcpgen command, flag, default, and example. Generated from the same source as `mcpgen schema`.\n---\n\n%s\n\n", generatedNote)
-	fmt.Fprintf(&b, "Reference for the mcpgen command line. Version documented: `%s`.\n\n", doc.Version)
+	fmt.Fprintf(&b, "Reference for the mcpgen command line.\n\n")
 	fmt.Fprintf(&b, "This page is generated from `cli.BuildSchemaDoc`, the exact document the [`mcpgen schema`"+linkBase+"/reference/generated/machine-interface/) command emits on stdout, so it cannot drift from the CLI.\n\n")
 	fmt.Fprintf(&b, "Global behavior:\n\n")
 	fmt.Fprintf(&b, "- A leading dash argument (e.g. `mcpgen --name weather ...`) is shorthand for `mcpgen new`.\n")
