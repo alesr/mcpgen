@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime/debug"
 	"strings"
 
 	"github.com/alesr/mcpgen/internal/cli"
@@ -13,9 +14,26 @@ import (
 )
 
 // Version is the mcpgen release version, stamped into generated file headers,
-// the manifest, and `mcpgen version`. It is a var so goreleaser can inject the
-// tagged version via -ldflags "-X .../internal/app.Version={{.Version}}".
-var Version = "1.0.0"
+// the manifest, and `mcpgen version`. Goreleaser injects the tagged version
+// via -ldflags "-X .../internal/app.Version={{.Version}}"; builds without
+// stamping (go install) fall back to the module version from build info, so
+// the binary no longer claims a hardcoded version.
+var Version string
+
+func init() {
+	if Version == "" {
+		Version = moduleVersion()
+	}
+}
+
+// moduleVersion returns the module version the binary was built at, or "dev"
+// for local builds without module version info.
+func moduleVersion() string {
+	if info, ok := debug.ReadBuildInfo(); ok && info.Main.Version != "" && info.Main.Version != "(devel)" {
+		return strings.TrimPrefix(info.Main.Version, "v")
+	}
+	return "dev"
+}
 
 // Run executes the CLI and returns the process exit code.
 func Run(args []string, stdin *os.File, stdout, stderr io.Writer) int {
