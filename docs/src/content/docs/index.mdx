@@ -39,7 +39,7 @@ mcpgen check ./weather --json
 { "mcpServers": { "mcpgen": { "command": "mcpgen", "args": ["mcp"] } } }
 ```
 
-The model gets four tools (`mcpgen_new`, `mcpgen_add`, `mcpgen_check`, `mcpgen_schema`), discovers the contract itself via `mcpgen_schema`, and loops until `mcpgen_check` returns green — no shell access needed. See [drive mcpgen from agents](/mcpgen/guides/drive-from-agents/).
+The model gets four tools: `mcpgen_new`, `mcpgen_add`, `mcpgen_check`, `mcpgen_schema`. It discovers the contract via `mcpgen_schema` and loops until `mcpgen_check` returns green. mcpgen needs no shell access. Writing the handler files still needs a filesystem tool or shell on the host. See [drive mcpgen from agents](/mcpgen/guides/drive-from-agents/).
 
 ## Who it is for
 
