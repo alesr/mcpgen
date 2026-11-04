@@ -107,6 +107,8 @@ func (g *Generator) Run() (*Result, error) {
 
 	result := &Result{
 		Dir:          g.OutDir,
+		FilesWritten: []string{},
+		FilesSkipped: []string{},
 		Plan:         plan,
 		ConfigPath:   filepath.ToSlash(filepath.Join(g.OutDir, config.FileName)),
 		ManifestPath: filepath.ToSlash(config.ManifestPath(g.OutDir)),

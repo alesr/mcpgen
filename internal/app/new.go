@@ -214,7 +214,7 @@ func printNewHuman(w io.Writer, res *ops.NewResult) {
 	_, _ = fmt.Fprintf(w, "Generated MCP server in %s\n", res.Dir)
 	_, _ = fmt.Fprintf(w, "  files written: %d", len(res.FilesWritten))
 	if len(res.FilesSkipped) > 0 {
-		_, _ = fmt.Fprintf(w, ", skipped: %d", len(res.FilesSkipped))
+		_, _ = fmt.Fprintf(w, ", skipped: %d (%s)", len(res.FilesSkipped), strings.Join(res.FilesSkipped, ", "))
 	}
 	_, _ = fmt.Fprintln(w)
 	if res.Check != nil {
