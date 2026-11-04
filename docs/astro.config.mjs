@@ -2,9 +2,9 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import starlightLinksValidator from 'starlight-links-validator';
 
-// Project-page hosting on GitHub Pages: https://alesr.github.io/mcpgen/
+// Project-page hosting on GitHub Pages: https://stdout.alesr.me/mcpgen/
 export default defineConfig({
-  site: 'https://alesr.github.io/mcpgen/',
+  site: 'https://stdout.alesr.me/mcpgen/',
   base: '/mcpgen',
   srcDir: './src',
   outDir: './dist',

@@ -92,9 +92,9 @@ Tool handlers are typed (`mcp.AddTool[In, Out]`): `<Tool>Input`/`<Tool>Output` s
 
 ## Docs and more
 
-- **Documentation site**: <https://alesr.github.io/mcpgen/> — quickstart, end-to-end tutorial, concepts (ownership model, marker regions, security), how-to guides, and a generated reference (CLI, `mcpgen.json`, exit codes, file tree).
+- **Documentation site**: <https://stdout.alesr.me/mcpgen/> — quickstart, end-to-end tutorial, concepts (ownership model, marker regions, security), how-to guides, and a generated reference (CLI, `mcpgen.json`, exit codes, file tree).
 - [`AGENTS.md`](AGENTS.md) — repo guidance for coding agents; [`SKILL.md`](SKILL.md) — the agent loop as a skill.
-- [Contributing](https://alesr.github.io/mcpgen/project/contributing/) — architecture, local checks (`make check`), releases.
+- [Contributing](https://stdout.alesr.me/mcpgen/project/contributing/) — architecture, local checks (`make check`), releases.
 - Development: `make check` (tidy, fmt, vet, race tests), `make golden`, `make docs-gen` / `make docs-build` for the docs site.
 
 ## License

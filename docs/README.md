@@ -2,7 +2,7 @@
 
 Documentation site for [mcpgen](https://github.com/alesr/mcpgen), built with
 [Astro Starlight](https://starlight.astro.build/). Deployed to GitHub Pages at
-<https://alesr.github.io/mcpgen/> on every push to `main`.
+<https://stdout.alesr.me/mcpgen/> on every push to `main`.
 
 ## Commands
 
@@ -29,4 +29,4 @@ npm run build   # production build into dist/ (fails on broken internal links)
 - `src/content.config.ts` — Starlight content collection schema.
 - `public/` — static assets (favicon, llms.txt).
 - `astro.config.mjs` — site config: `site`/`base` point at the GitHub Pages
-  project URL (`https://alesr.github.io/mcpgen/`, base `/mcpgen`).
+  project URL (`https://stdout.alesr.me/mcpgen/`, base `/mcpgen`).

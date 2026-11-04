@@ -3,34 +3,34 @@
 mcpgen is a CLI that generates, extends, and verifies MCP (Model Context Protocol) servers in Go.
 Generated projects pin github.com/modelcontextprotocol/go-sdk v1.8.0 and target MCP spec 2026-07-28.
 
-Docs site: https://alesr.github.io/mcpgen/
+Docs site: https://stdout.alesr.me/mcpgen/
 Repository: https://github.com/alesr/mcpgen
 
 ## Pages
 
-- Quickstart: https://alesr.github.io/mcpgen/quickstart/
-- Tutorial (weather server end to end): https://alesr.github.io/mcpgen/tutorial/
+- Quickstart: https://stdout.alesr.me/mcpgen/quickstart/
+- Tutorial (weather server end to end): https://stdout.alesr.me/mcpgen/tutorial/
 - Concepts:
-  - Ownership model and regeneration: https://alesr.github.io/mcpgen/concepts/ownership-model/
-  - Marker regions and add: https://alesr.github.io/mcpgen/concepts/marker-regions/
-  - Project layout: https://alesr.github.io/mcpgen/concepts/project-layout/
-  - check and conformance: https://alesr.github.io/mcpgen/concepts/check-and-conformance/
-  - Security model: https://alesr.github.io/mcpgen/concepts/security-model/
+  - Ownership model and regeneration: https://stdout.alesr.me/mcpgen/concepts/ownership-model/
+  - Marker regions and add: https://stdout.alesr.me/mcpgen/concepts/marker-regions/
+  - Project layout: https://stdout.alesr.me/mcpgen/concepts/project-layout/
+  - check and conformance: https://stdout.alesr.me/mcpgen/concepts/check-and-conformance/
+  - Security model: https://stdout.alesr.me/mcpgen/concepts/security-model/
 - How-to guides:
-  - Add tools, prompts, resources: https://alesr.github.io/mcpgen/guides/add-capabilities/
-  - Transports, protocol, features: https://alesr.github.io/mcpgen/guides/transports-and-features/
-  - Regenerate safely: https://alesr.github.io/mcpgen/guides/regenerate-safely/
-  - Run check in CI: https://alesr.github.io/mcpgen/guides/check-in-ci/
-  - Drive mcpgen from agents: https://alesr.github.io/mcpgen/guides/drive-from-agents/
-  - Deploy with Docker: https://alesr.github.io/mcpgen/guides/deploy-docker/
+  - Add tools, prompts, resources: https://stdout.alesr.me/mcpgen/guides/add-capabilities/
+  - Transports, protocol, features: https://stdout.alesr.me/mcpgen/guides/transports-and-features/
+  - Regenerate safely: https://stdout.alesr.me/mcpgen/guides/regenerate-safely/
+  - Run check in CI: https://stdout.alesr.me/mcpgen/guides/check-in-ci/
+  - Drive mcpgen from agents: https://stdout.alesr.me/mcpgen/guides/drive-from-agents/
+  - Deploy with Docker: https://stdout.alesr.me/mcpgen/guides/deploy-docker/
 - Reference (generated from source by tools/docgen):
-  - CLI commands and flags: https://alesr.github.io/mcpgen/reference/generated/cli/
-  - mcpgen.json fields: https://alesr.github.io/mcpgen/reference/generated/config/
-  - Machine interface (JSON envelope, exit codes, error codes): https://alesr.github.io/mcpgen/reference/generated/machine-interface/
-  - Generated files and check stages: https://alesr.github.io/mcpgen/reference/generated/project-files/
+  - CLI commands and flags: https://stdout.alesr.me/mcpgen/reference/generated/cli/
+  - mcpgen.json fields: https://stdout.alesr.me/mcpgen/reference/generated/config/
+  - Machine interface (JSON envelope, exit codes, error codes): https://stdout.alesr.me/mcpgen/reference/generated/machine-interface/
+  - Generated files and check stages: https://stdout.alesr.me/mcpgen/reference/generated/project-files/
 - Project:
-  - Contributing and architecture: https://alesr.github.io/mcpgen/project/contributing/
-  - FAQ and troubleshooting: https://alesr.github.io/mcpgen/project/faq/
+  - Contributing and architecture: https://stdout.alesr.me/mcpgen/project/contributing/
+  - FAQ and troubleshooting: https://stdout.alesr.me/mcpgen/project/faq/
 
 ## Machine-readable contract
 
