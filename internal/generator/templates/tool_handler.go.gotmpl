@@ -22,5 +22,5 @@ import (
 // typed output.
 func {{ .GoName }}(_ context.Context, _ *mcp.CallToolRequest, in {{ .GoName }}Input) (*mcp.CallToolResult, {{ .GoName }}Output, error) {
 	_ = in
-	return nil, {{ .GoName }}Output{}, nil
+	return &mcp.CallToolResult{}, {{ .GoName }}Output{}, nil
 }

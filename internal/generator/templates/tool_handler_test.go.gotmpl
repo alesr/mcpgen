@@ -10,11 +10,20 @@ import (
 
 func Test{{ .GoName }}(t *testing.T) {
 	t.Parallel()
-	_, out, err := {{ .GoName }}(context.Background(), &mcp.CallToolRequest{
+	res, out, err := {{ .GoName }}(context.Background(), &mcp.CallToolRequest{
 		Params: &mcp.CallToolParamsRaw{Name: {{ quote .ID }}},
 	}, {{ .GoName }}Input{})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	_ = out
+	if res == nil {
+		t.Fatal("expected a non-nil CallToolResult")
+	}
+	raw, err := json.Marshal(out)
+	if err != nil {
+		t.Fatalf("output does not marshal to JSON: %v", err)
+	}
+	if string(raw) == "null" {
+		t.Fatal("expected a non-null JSON output")
+	}
 }
