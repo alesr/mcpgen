@@ -6,7 +6,7 @@ description: Two paths — shell agents use the --json envelope and exit codes; 
 mcpgen is built AI-first. One code path (`internal/ops`) serves two surfaces, so they cannot diverge:
 
 1. **Shell agents** (Claude Code, Cursor CLI, terminals, scripts) run the CLI with `--json` and branch on exit codes.
-2. **MCP hosts without shell access** (Claude Desktop, web clients, any MCP client) install **mcpgen itself as an MCP server** — `mcpgen mcp` — and the model drives mcpgen with tools.
+2. **MCP hosts without shell access** (Claude Desktop, web clients, any MCP client) install **mcpgen itself as an MCP server** — `mcpgen mcp`. The model then drives mcpgen with tools.
 
 Both paths follow the same loop:
 
@@ -39,7 +39,7 @@ Exit codes are stable — branch on them:
 | 5 | conflict (duplicate id, markers missing/edited) |
 | 6 | prerequisite missing (Go toolchain, node/npx for forced conformance) |
 
-The full tables — exit codes, the error-code table, and the envelope schema — are generated from source on the [machine interface](/mcpgen/reference/generated/machine-interface/) page.
+The exit-code, error-code, and envelope tables are generated from source. See the [machine interface](/mcpgen/reference/generated/machine-interface/) page.
 
 Self-discovery: `mcpgen schema` prints one JSON document with every command, flag, type, default, and example, the exit-code table, the envelope description, and the full `mcpgen.json` JSON Schema (`config_json_schema`). It is the same document that generates the [CLI reference](/mcpgen/reference/generated/cli/) page, so it never drifts from the docs.
 
@@ -62,15 +62,16 @@ The server exposes four tools (captured from a real `tools/list`):
 
 Two properties matter for model-driven use:
 
-- **Specs are objects, not files.** `mcpgen_add` takes the spec inline (`spec: {id, title, inputSchema, ...}`), so the model never writes temporary JSON files.
-- **Results are structured.** Every tool returns `ok`, the result payload, and on failure `error` with `code`, `exit_code`, and `fix` — the same envelope fields as the CLI. `mcpgen_new` also returns `next_actions` with the next step.
+- **Specs are objects, not files.** `mcpgen_add` takes the spec inline (`spec: {id, title, inputSchema, ...}`). The model never writes temporary JSON files.
+- **Results are structured.** Each of `mcpgen_new`, `mcpgen_add`, and `mcpgen_check` returns `ok`, the result payload, and on failure `error` with `code`, `exit_code`, and `fix` — the same fields the CLI envelope carries (without `stage` and `command`). `mcpgen_new` also returns `next_actions`. `mcpgen_schema` returns the bare schema document.
 
-Real call, captured over stdio (`tools/call mcpgen_new` with `dryRun: true`):
+Real call, captured over stdio (`tools/call mcpgen_new` with `dryRun: true`; output trimmed):
 
 ```json
 {
   "ok": true,
   "dir": "./weather",
+  "plan": { "...": "the full dry-run file plan" },
   "next_actions": [
     "implement handler stubs",
     "mcpgen_check until ok=true"
@@ -88,7 +89,7 @@ The model loop inside the client is then:
 
 Step 3 needs a filesystem tool or a shell in the client. The mcpgen tools write only inside generated projects; they do not replace a filesystem server.
 
-Note: the host machine still needs the Go toolchain for `new` and `check` to pass (exit code 6 / `PREREQUISITE_MISSING` otherwise). Node.js/npx are optional, for the conformance stage.
+Note: the host machine needs the Go toolchain. `mcpgen_check` fails without it (exit code 6, `PREREQUISITE_MISSING`). `mcpgen_new` fails too, unless `dryRun` or `noCheck` is set. Node.js/npx are optional, for the conformance stage.
 
 ## SKILL.md
 
