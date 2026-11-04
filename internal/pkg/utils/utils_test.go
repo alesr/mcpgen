@@ -109,3 +109,55 @@ func TestDefaultIfEmpty(t *testing.T) {
 		})
 	}
 }
+
+func TestGoIdent(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		given    string
+		expected string
+	}{
+		{"foo-server", "FooServer"},
+		{"foo_bar", "FooBar"},
+		{"already", "Already"},
+		{"9lives", "N9Lives"}, // identifiers cannot start with a digit
+		{"", "Item"},          // empty falls back
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.given, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tt.expected, GoIdent(tt.given))
+		})
+	}
+}
+
+func TestGoFileName(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		given    string
+		expected string
+	}{
+		{"foo-server", "foo_server"},
+		{"FooBar", "foo_bar"},
+		{"", "item"},
+		// Dots become underscores, so no ".." path component can survive.
+		{"../../evil", "__/__/evil"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.given, func(t *testing.T) {
+			t.Parallel()
+			got := GoFileName(tt.given)
+			assert.Equal(t, tt.expected, got)
+			assert.NotContains(t, got, "..")
+		})
+	}
+}
+
+func TestTitleCaseID(t *testing.T) {
+	t.Parallel()
+	assert.Equal(t, "Foo Bar", TitleCaseID("foo-bar"))
+	assert.Equal(t, "Forecast", TitleCaseID("forecast"))
+}
