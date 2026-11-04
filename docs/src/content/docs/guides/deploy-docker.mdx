@@ -1,0 +1,73 @@
+---
+title: Deploy with Docker
+description: Build and run the generated Dockerfile, expose the port safely, and publish the OCI artifact referenced by server.json.
+---
+
+Every generated project ships a `Dockerfile` (captured from the template):
+
+```dockerfile
+# syntax=docker/dockerfile:1
+FROM golang:1.26 AS build
+WORKDIR /src
+COPY . .
+RUN go mod tidy && CGO_ENABLED=0 go build -o /out/server ./cmd/<name>
+
+FROM gcr.io/distroless/static-debian12:nonroot
+COPY --from=build /out/server /server
+EXPOSE 8080        # only for --transport http
+ENTRYPOINT ["/server"]
+```
+
+## Build and run
+
+```sh
+docker build -t weather-mcp ./weather
+docker run --rm -p 127.0.0.1:8080:8080 weather-mcp
+curl -s http://127.0.0.1:8080/healthz   # -> ok
+```
+
+Notes:
+
+- The image runs as `nonroot` (distroless) with a static binary (`CGO_ENABLED=0`).
+- The container runs the server with its default `-addr 127.0.0.1:8080`. To make the port reachable outside the container you map it with `-p`, but the server inside still binds loopback — pass the flag to expose it:
+
+```sh
+docker run --rm -p 8080:8080 weather-mcp -addr :8080
+```
+
+Only do this on a trusted network: the server has no authentication unless you enabled the `oauth` feature (see [security model](/mcpgen/concepts/security-model/)).
+
+- For stdio projects the image runs the server on stdio; use it with a client that speaks stdio over the container (`docker run -i weather-mcp`), not with `-p`.
+
+## Publish to a registry (OCI)
+
+`server.json` (validated by the `serverjson` stage of `check`) declares the publishable artifact:
+
+```json
+{
+  "name": "<registry-name>",
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "<registry>/<image>",
+      "version": "0.1.0",
+      "transport": { "type": "streamable-http" }
+    }
+  ]
+}
+```
+
+Build, tag, and push the image to that identifier, for example:
+
+```sh
+docker build -t ghcr.io/acme/weather:0.1.0 ./weather
+docker push ghcr.io/acme/weather:0.1.0
+```
+
+Then publish `server.json` to the MCP Registry per its documentation. `mcpgen check` validates the descriptor shape; the registry itself validates on publish.
+
+## Next steps
+
+- [Security model](/mcpgen/concepts/security-model/) — bind address, Origin protection, oauth.
+- [Transports, protocol, features](/mcpgen/guides/transports-and-features/) — what the image serves.
+- [Run check in CI](/mcpgen/guides/check-in-ci/) — verify before you push.

@@ -1,0 +1,65 @@
+---
+title: mcpgen
+description: Deterministic Go codegen for spec-compliant MCP servers. Generate a server, extend it, and verify it until green.
+template: splash
+hero:
+  tagline: Generate, extend, and verify MCP servers in Go — safely.
+  actions:
+    - text: Quickstart (60 seconds)
+      link: /mcpgen/quickstart/
+      icon: right-arrow
+      variant: primary
+    - text: Read the tutorial
+      link: /mcpgen/tutorial/
+      icon: right-arrow
+---
+
+mcpgen is a CLI that generates, extends, and verifies [MCP](https://modelcontextprotocol.io) (Model Context Protocol) servers in Go. Generated projects build on the official [`go-sdk`](https://github.com/modelcontextprotocol/go-sdk) v1.8.0 and target MCP spec 2026-07-28.
+
+## Why mcpgen exists
+
+Three properties make it different from hand-written scaffolds:
+
+1. **Safe regeneration.** Every generated file has an owner (`mcpgen` or `user`). A manifest at `.mcpgen/manifest.json` stores a sha256 per file. Regeneration never overwrites your files and skips mcpgen-owned files you edited.
+2. **Built-in verification.** `mcpgen check` runs config validation, `go mod tidy`, `gofmt`, `go vet`, `go build`, `go test -race`, and the official MCP conformance suite. Exit 0 means green.
+3. **AI-native interface.** mcpgen is not only a CLI. It is itself an MCP server, so an AI client can generate, extend, and verify MCP servers for you. Both surfaces share one code path and emit one JSON envelope with stable exit codes and `fix` hints.
+
+## Two ways to drive it
+
+**From a terminal** — every command works manually, with a JSON envelope for scripts and agents:
+
+```sh
+mcpgen new ./weather --name weather --module example.com/weather --transport http --json
+mcpgen check ./weather --json
+```
+
+**From an AI client** — Claude Desktop, Cursor, or any MCP host installs mcpgen as a server and lets the model do the work:
+
+```json
+{ "mcpServers": { "mcpgen": { "command": "mcpgen", "args": ["mcp"] } } }
+```
+
+The model gets four tools: `mcpgen_new`, `mcpgen_add`, `mcpgen_check`, `mcpgen_schema`. It discovers the contract via `mcpgen_schema` and loops until `mcpgen_check` returns green. mcpgen needs no shell access. Writing the handler files still needs a filesystem tool or shell on the host. See [drive mcpgen from agents](/mcpgen/guides/drive-from-agents/).
+
+## Who it is for
+
+- Developers who want a production-shaped Go MCP server in seconds, not days.
+- AI clients and coding agents that build MCP servers for their users.
+- Teams that regenerate servers from a spec (`mcpgen.json`) and need their edits to survive.
+
+## Install
+
+Requires Go 1.26+. Node.js/npx are optional — used only for the conformance suite and the Inspector smoke check.
+
+```sh
+go install github.com/alesr/mcpgen@latest
+```
+
+Release binaries for Linux, macOS, and Windows are published on the [GitHub Releases page](https://github.com/alesr/mcpgen/releases) (goreleaser, tags `vX.Y.Z`).
+
+## Next steps
+
+- [Quickstart](/mcpgen/quickstart/) — generate and verify a server in 60 seconds.
+- [Tutorial](/mcpgen/tutorial/) — build a weather MCP server end to end.
+- [Concepts](/mcpgen/concepts/ownership-model/) — how the ownership model keeps your code safe.
+- [Reference](/mcpgen/reference/generated/cli/) — every command, flag, field, and exit code.

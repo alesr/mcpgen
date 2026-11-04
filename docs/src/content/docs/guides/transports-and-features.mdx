@@ -1,0 +1,79 @@
+---
+title: Transports, protocol modes, and features
+description: How to choose stdio or HTTP, compat or latest-only, and how to enable the tasks, skills, and oauth features.
+---
+
+All of these are set in `mcpgen.json` (or via flags on `mcpgen new`). The relevant config sections:
+
+```json
+{
+  "transport": { "type": "http", "httpPort": 8080 },
+  "protocol": "compat",
+  "features": { "tasks": true, "skills": false, "oauth": false }
+}
+```
+
+## Choose the transport
+
+| | `stdio` (default) | `http` |
+|---|---|---|
+| How clients connect | spawn the process, speak over stdin/stdout | HTTP POST to `/mcp` (stateless streamable) |
+| Listen address | none | `127.0.0.1:<httpPort>` by default; override with `-addr` |
+| Extra endpoints | none | `/healthz` returns `ok` |
+| Conformance stage | skipped (suite speaks HTTP) | runs when node/npx are present and protocol is `compat` |
+| Use when | local tools for one client (editors, desktop apps) | shared/remote servers, containers, load balancers |
+
+```sh
+mcpgen new ./weather --name weather --module example.com/weather --transport http --port 9090
+```
+
+On an existing project, pass the flag again with `--force`; only flags you pass override the existing `mcpgen.json`:
+
+```sh
+mcpgen new ./weather --transport http --port 9090 --force --no-check
+```
+
+Run the server:
+
+```sh
+go run ./cmd/weather                  # stdio
+go run ./cmd/weather -- -addr 127.0.0.1:9090   # http, custom addr
+curl -s http://127.0.0.1:9090/healthz   # -> ok
+```
+
+## Choose the protocol mode
+
+| Mode | Default | Behavior |
+|---|---|---|
+| `compat` | yes | lets the SDK negotiate down to legacy MCP versions (2025-11-25 and older); capable clients still get 2026-07-28 |
+| `latest-only` | | sets `SupportedProtocolVersions` to `["2026-07-28"]` only |
+
+```sh
+mcpgen new ./weather --name weather --module example.com/weather --protocol latest-only
+```
+
+Notes, verified in code and by running a server:
+
+- `latest-only` is for servers whose clients are known to speak 2026-07-28.
+- The conformance suite speaks the legacy initialize handshake, so the conformance stage is skipped for `latest-only` servers by design.
+- The SDK's `initialize` method is deprecated in 2026-07-28; version 2026-07-28 requests use the `MCP-Protocol-Version` / `Mcp-Method` header scheme instead (verified: requests with `MCP-Protocol-Version: 2026-07-28` but without those headers are rejected with -32020).
+
+## Enable features
+
+```sh
+mcpgen new ./weather --name weather --module example.com/weather --features tasks,skills,oauth
+```
+
+| Feature | Adds | What it does |
+|---|---|---|
+| `tasks` | `internal/mcpapp/tasks.go` | a `registerTasks` stub for the MCP Tasks extension (long-running operations); replace the stub with real handlers |
+| `skills` | `internal/mcpapp/skills.go` | serves `SKILL.md` files from a `skills/` directory as `skill://` resources (skills/list, skills/get) |
+| `oauth` | `internal/mcpapp/oauth.go` | commented OAuth wiring for 2026-07-28 authorization (see [security model](/mcpgen/concepts/security-model/)) |
+
+Features are additive on regen: `--features` merges into the existing set. To remove a feature, edit `mcpgen.json` directly (set the flag to `false` or delete the key), then regenerate with `--force`.
+
+## Next steps
+
+- [Security model](/mcpgen/concepts/security-model/) — bind address, Origin protection, oauth details.
+- [Deploy with Docker](/mcpgen/guides/deploy-docker/) — the generated Dockerfile.
+- [mcpgen.json reference](/mcpgen/reference/generated/config/) — `transport`, `protocol`, `features` fields.

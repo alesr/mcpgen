@@ -1,0 +1,43 @@
+---
+title: Project layout
+description: The file tree a generated server has, who owns each file, and why it is shaped that way.
+---
+
+A freshly generated project (default: stdio, with the three stubs) looks like this. The tree below is generated from a real dry-run plan — see [the generated files reference](/mcpgen/reference/generated/project-files/) for the full table with owners.
+
+```text
+weather/
+├── cmd/weather/main.go                  entrypoint: stdio, or http server with -addr
+├── internal/mcpapp/
+│   ├── mcpapp.go                        server wiring (stateless HTTP, protocol versions, cache policy)
+│   ├── instructions.go                  server instructions sent to clients
+│   ├── tools.go                         registerTools + // mcpgen:begin tools / // mcpgen:end tools
+│   ├── prompts.go                       registerPrompts + marker region
+│   ├── resources.go                     registerResources + marker region
+│   ├── tasks.go / skills.go / oauth.go  only with --features tasks,skills,oauth
+│   ├── tools/handlers/                  doc.go (mcpgen) + one <tool>.go and <tool>_test.go per tool (user)
+│   ├── prompts/                         doc.go (mcpgen) + one <prompt>.go and test per prompt (user)
+│   └── resources/                       doc.go (mcpgen) + one <resource>.go and test per resource (user)
+├── mcpgen.json                          single source of truth (version 1)
+├── .mcpgen/manifest.json                owner + sha256 per file
+├── server.json                          MCP Registry descriptor (OCI package block)
+├── go.mod                               pins github.com/modelcontextprotocol/go-sdk v1.8.0
+├── Dockerfile                           multi-stage OCI image build
+├── Makefile                             build/fmt/vet/test/check targets
+├── .github/workflows/ci.yml             CI: tidy, fmt, vet, build, test -race, conformance (http only)
+├── AGENTS.md, README.md, .gitignore
+```
+
+## Why it is shaped this way
+
+- **`mcpgen.json` is the source of truth.** All commands (`new`, `add`, `check`) read it. Regeneration is deterministic: same config in, same project out.
+- **Registration and implementation are separate.** `tools.go` (mcpgen-owned) holds only registrations inside marker regions; the logic lives in `internal/mcpapp/tools/handlers/<tool>.go` (user-owned). This split is what lets `add` insert registrations without touching your code, and lets regen rewrite registrations without touching your code.
+- **One file per capability.** Ids become file names (`get_forecast` → `get_forecast.go`, handler `GetForecast`). The id pattern `^[a-zA-Z0-9_-]+$` exists so this mapping is always safe.
+- **Typed handlers.** Each tool gets `<Tool>Input`/`<Tool>Output` structs generated from its JSON Schema, used with the SDK's `mcp.AddTool[In, Out]` API. The SDK validates arguments before your handler runs.
+- **Infra files are generated too.** `Dockerfile`, `server.json`, `Makefile`, and CI come from the same config, so the project is deployable and verifiable from the first commit.
+
+## Next steps
+
+- [Generated files reference](/mcpgen/reference/generated/project-files/) — exact table with owner per file.
+- [Ownership model and regeneration](/mcpgen/concepts/ownership-model/) — what happens to each file on regen.
+- [Security model](/mcpgen/concepts/security-model/) — bind address, Origin protection, auth.

@@ -1,0 +1,212 @@
+---
+title: 'Tutorial: build a weather MCP server'
+description: Build a weather MCP server end to end — stdio first, then HTTP, then a tool, a prompt, a resource, and a green check. Every command was executed.
+---
+
+This tutorial builds a small weather MCP server end to end. You generate a stdio server, verify it, switch to HTTP, add a tool, a prompt, and a resource, implement the tool, and run `mcpgen check` until it is green. Every command and output below was captured from a real run; long output is trimmed with `...`.
+
+You need Go 1.26+ and, for the conformance stage, Node.js/npx.
+
+## 1. Generate a stdio server
+
+```sh
+mcpgen new ./weather --name weather --module example.com/weather --no-check --json
+```
+
+```json
+{ "ok": true, "result": { "dir": "./weather", "files_written": [ "... 24 files ..." ] } }
+```
+
+The default transport is `stdio`. With no spec files, you get three stubs: a `greet` tool, a `welcome` prompt, and a `readme` resource.
+
+## 2. Verify it
+
+```sh
+mcpgen check ./weather --json
+```
+
+Exit code 0. Stage summary (real output):
+
+```text
+passed config - mcpgen.json valid (version 1, 1 tools, 1 prompts, 1 resources)
+passed serverjson - server.json valid (MCP Registry descriptor)
+passed tidy - go mod tidy
+passed fmt - gofmt clean
+passed vet - go vet clean
+passed build - go build ok
+passed test - go test -race ok
+skipped conformance - disabled
+```
+
+The conformance stage is skipped for stdio servers: the suite speaks HTTP, so it runs only for `--transport http` (see [check and conformance](/mcpgen/concepts/check-and-conformance/)).
+
+## 3. Switch to HTTP
+
+Re-running `new --force` on the existing project regenerates mcpgen-owned files. Only flags you pass override the existing `mcpgen.json`; everything else is preserved.
+
+```sh
+mcpgen new ./weather --name weather --module example.com/weather --transport http --force --no-check --json
+```
+
+```json
+{ "ok": true, "result": { "files_written": 17, "files_skipped": ["internal/mcpapp/tools/handlers/greet.go", "..."] } }
+```
+
+The user-owned stub files (`greet.go` and friends) are skipped. `mcpgen.json` now has `"transport": { "type": "http", "httpPort": 8080 }`, and `cmd/weather/main.go` starts an HTTP server instead of stdio.
+
+## 4. Run the server and call it
+
+```sh
+cd weather
+go run ./cmd/weather &          # listens on 127.0.0.1:8080 by default
+curl -s http://127.0.0.1:8080/healthz
+```
+
+```text
+ok
+```
+
+Call the `get_forecast` tool after you add it (next step). A raw call looks like this (captured):
+
+```sh
+curl -s -X POST http://127.0.0.1:8080/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"get_forecast","arguments":{"city":"Lisbon"}}}'
+```
+
+```text
+event: message
+data: {"jsonrpc":"2.0","id":1,"result":{"content":[{"type":"text","text":"{\"summary\":\"Sunny in Lisbon\",\"temperatureC\":21.5}"}],"structuredContent":{"summary":"Sunny in Lisbon","temperatureC":21.5}}}
+```
+
+## 5. Add a tool, a prompt, and a resource
+
+Write the spec files:
+
+```sh
+mkdir -p specs
+```
+
+`specs/forecast.json`:
+
+```json
+{
+  "id": "get_forecast",
+  "title": "Get forecast",
+  "description": "Returns the forecast for a city.",
+  "inputSchema": {
+    "type": "object",
+    "properties": { "city": { "type": "string", "description": "City name" } },
+    "required": ["city"]
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "summary": { "type": "string" },
+      "temperatureC": { "type": "number" }
+    },
+    "required": ["summary"]
+  },
+  "readOnly": true
+}
+```
+
+`specs/forecast_prompt.json`:
+
+```json
+{
+  "id": "forecast_brief",
+  "title": "Forecast brief",
+  "description": "Summarize the forecast for a city.",
+  "arguments": [{ "name": "city", "required": true }]
+}
+```
+
+`specs/alerts_resource.json`:
+
+```json
+{
+  "id": "alerts_feed",
+  "title": "Alerts feed",
+  "description": "Active alerts as a text feed.",
+  "uri": "file:///alerts.txt",
+  "mimeType": "text/plain",
+  "text": "No active alerts."
+}
+```
+
+Add all three:
+
+```sh
+mcpgen add tool     specs/forecast.json       --dir ./weather --no-check --json
+mcpgen add prompt   specs/forecast_prompt.json --dir ./weather --no-check --json
+mcpgen add resource specs/alerts_resource.json --dir ./weather --no-check --json
+```
+
+Real results (trimmed):
+
+```json
+{ "ok": true, "result": { "kind": "tool", "id": "get_forecast",
+  "files_written": ["internal/mcpapp/tools/handlers/get_forecast.go", "internal/mcpapp/tools/handlers/get_forecast_test.go"],
+  "registered_in": "internal/mcpapp/tools.go" } }
+```
+
+```json
+{ "ok": true, "result": { "kind": "prompt", "id": "forecast_brief",
+  "files_written": ["internal/mcpapp/prompts/forecast_brief.go", "..."],
+  "registered_in": "internal/mcpapp/prompts.go" } }
+```
+
+```json
+{ "ok": true, "result": { "kind": "resource", "id": "alerts_feed",
+  "files_written": ["internal/mcpapp/resources/alerts_feed.go", "..."],
+  "registered_in": "internal/mcpapp/resources.go" } }
+```
+
+Each `add` does three things: appends the entry to `mcpgen.json`, creates the user-owned implementation and test files, and inserts the registration into the `// mcpgen:begin ... // mcpgen:end` marker region of the matching registration file (see [marker regions](/mcpgen/concepts/marker-regions/)).
+
+## 6. Implement the tool
+
+`add` created `internal/mcpapp/tools/handlers/get_forecast.go` with typed `GetForecastInput`/`GetForecastOutput` structs derived from the JSON Schema. Replace the stub body:
+
+```go
+// GetForecast implements the "get_forecast" tool.
+func GetForecast(_ context.Context, _ *mcp.CallToolRequest, in GetForecastInput) (*mcp.CallToolResult, GetForecastOutput, error) {
+	out := GetForecastOutput{
+		Summary:      fmt.Sprintf("Sunny in %s", in.City),
+		TemperatureC: 21.5,
+	}
+	return &mcp.CallToolResult{}, out, nil
+}
+```
+
+The SDK validates the arguments against `inputSchema` and unmarshals them into `GetForecastInput` before the handler runs. A non-nil error return becomes an `isError` result the client can show to the model, not a protocol error.
+
+## 7. Final check
+
+```sh
+mcpgen check ./weather --json
+```
+
+Exit code 0. Real stage summary:
+
+```text
+passed config - mcpgen.json valid (version 1, 2 tools, 2 prompts, 2 resources)
+passed serverjson - server.json valid (MCP Registry descriptor)
+passed tidy - go mod tidy
+passed fmt - gofmt clean
+passed vet - go vet clean
+passed build - go build ok
+passed test - go test -race ok
+passed conformance - conformance passed against http://127.0.0.1:61427/mcp: 8/30 checks passed; 22 failed scenarios could not be classified and did not gate: ...
+```
+
+The conformance line needs an honest reading: the suite ran 30 scenarios. 8 protocol-level scenarios passed and gate the result. 22 capability-fixture scenarios failed because they call well-known test tools (for example `test_simple_text`) that this server does not have; mcpgen classifies those as non-gating. See [check and conformance](/mcpgen/concepts/check-and-conformance/) for what gates and what does not.
+
+## Next steps
+
+- [Add or remove capabilities](/mcpgen/guides/add-capabilities/) — the full `add` contract and removal procedure.
+- [Transports, protocol, features](/mcpgen/guides/transports-and-features/) — stdio vs HTTP, `compat` vs `latest-only`, tasks/skills/oauth.
+- [Run check in CI](/mcpgen/guides/check-in-ci/) — the generated `.github/workflows/ci.yml` already does this.
+- [CLI reference](/mcpgen/reference/generated/cli/) — all commands and flags.

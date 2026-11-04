@@ -1,0 +1,68 @@
+---
+title: Marker regions and `mcpgen add`
+description: How `add` edits registration files inside // mcpgen:begin/end marker regions, AST-aware, and what happens when the markers are damaged.
+---
+
+Registration files (`internal/mcpapp/tools.go`, `prompts.go`, `resources.go`) contain a marker region that mcpgen owns:
+
+```go
+func registerTools(server *mcp.Server) {
+	// mcpgen:begin tools
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "greet",
+		// ...
+	}, handlers.Greet)
+	// mcpgen:end tools
+}
+```
+
+The regions are named `tools`, `prompts`, and `resources`.
+
+## What `add` does
+
+`mcpgen add tool specs/forecast.json --dir ./weather` performs four steps, in order:
+
+1. Loads and validates the spec. An id that fails `^[a-zA-Z0-9_-]+$` exits 2 with `SPEC_INVALID` before anything is written.
+2. Checks the marker region exists and parses, before writing anything, so a damaged registration file fails without leaving orphan files.
+3. Appends the entry to `mcpgen.json`, creates the user-owned files (`<id>.go` and `<id>_test.go` in the matching package), and inserts the registration statement into the marker region.
+4. Runs the check pipeline (unless `--no-check`) and refreshes the manifest hashes.
+
+Insertion goes through `go/parser` + `go/ast` + `go/format` — never regex. The statement is inserted before the `// mcpgen:end <region>` line, missing imports (`encoding/json`, the handler package) are added, and the file is re-formatted. The result is always valid, formatted Go.
+
+A real insertion (captured from `internal/mcpapp/tools.go` after `add tool`):
+
+```go
+	mcp.AddTool(server, &mcp.Tool{
+		Name:         "get_forecast",
+		Title:        "Get forecast",
+		Description:  "Returns the forecast for a city.",
+		InputSchema:  json.RawMessage(`{"properties":{"city":{"description":"City name","type":"string"}},"required":["city"],"type":"object"}`),
+		OutputSchema: json.RawMessage(`{"properties":{"summary":{"type":"string"},"temperatureC":{"type":"number"}},"required":["summary"],"type":"object"}`),
+		Annotations: &mcp.ToolAnnotations{
+			ReadOnlyHint:   true,
+			IdempotentHint: false,
+		},
+	}, handlers.GetForecast)
+```
+
+Schemas are embedded as raw-string literals (`json.RawMessage` with backticks), so any valid JSON Schema works without escaping.
+
+## Failure modes
+
+| Situation | Exit code | Error |
+|---|---|---|
+| Id already in `mcpgen.json` | 5 | `CONFLICT` — "already registered ... choose a different id" |
+| Id already inside the marker region | 5 | `CONFLICT` — restore the markers or remove the duplicate |
+| Markers missing or the file does not parse | 5 | `CONFLICT` — "restore the mcpgen:begin/end markers" |
+| Spec file unreadable or invalid JSON | 2 | `IO_ERROR` / `SPEC_INVALID` |
+| Directory is not an mcpgen project | 3 | `NOT_MCPGEN_PROJECT` |
+
+## Rules for hand edits
+
+- Never edit inside the `// mcpgen:begin ... // mcpgen:end` region. If you do, `add` refuses to run (exit 5) until you restore the markers.
+- You may edit everything else in a registration file. The manifest hash then flags the file as modified on the next regen, and regen skips it instead of overwriting your edit (see [the ownership model](/mcpgen/concepts/ownership-model/)).
+
+## Next steps
+
+- [Add tools, prompts, resources](/mcpgen/guides/add-capabilities/) — goal-oriented recipes, including removal.
+- [Ownership model and regeneration](/mcpgen/concepts/ownership-model/) — why modified files are skipped.

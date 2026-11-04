@@ -1,0 +1,48 @@
+---
+title: Security model of generated servers
+description: "What a generated HTTP server protects by default — loopback bind and Origin checking — and what it does not: authentication. Enable the oauth feature to add it."
+---
+
+This page describes what the generated code actually does. Everything below was verified against a real generated server.
+
+## Defaults for the HTTP transport
+
+- **Loopback bind.** The server listens on `127.0.0.1:<port>` by default (`-addr` flag, default `127.0.0.1:8080`). The generated comment says why: an MCP server with no auth must not be exposed on all interfaces. To listen on all interfaces, pass `-addr :8080` explicitly.
+- **Origin protection.** The `/mcp` endpoint is wrapped in Go's `http.NewCrossOriginProtection()`. A POST with a cross-site `Origin` header is rejected with 403 (verified: `Origin: https://evil.example` → `403`). Non-browser clients send no `Origin` header and are unaffected. This is DNS-rebinding/CSRF hardening per the MCP security best practices.
+- **Health endpoint.** `/healthz` returns `200 ok` and is meant for load balancers.
+- **Timeouts.** The HTTP server sets `ReadHeaderTimeout: 10s` and shuts down gracefully on SIGINT/SIGTERM (10s shutdown window).
+- **Stateless streamable HTTP.** `/mcp` is served by the SDK's stateless `StreamableHTTPHandler` — no server-side session state.
+
+## What is not there by default
+
+The generated HTTP server has **no authentication and no authorization**. Anyone who can reach the port can call every tool. This is a deliberate default: the server binds to loopback, so the network boundary is the protection. Do not pass `-addr :8080` on a shared host without adding auth.
+
+## Adding OAuth (feature `oauth`)
+
+```sh
+mcpgen new ./weather --name weather --module example.com/weather --transport http --features oauth --json
+```
+
+This adds `internal/mcpapp/oauth.go`, a commented wiring block aligned with MCP 2026-07-28 authorization hardening. It shows how to:
+
+1. Publish `/.well-known/oauth-protected-resource` (RFC 9728) so clients can discover your authorization server.
+2. Use resource indicators (RFC 8707) so tokens are audience-bound.
+3. Use Client ID Metadata Documents instead of Dynamic Client Registration (DCR is deprecated in 2026-07-28).
+4. Require a valid token on `/mcp` via the SDK's `oauthex.RequireAuth` middleware.
+
+The block is intentionally commented out: uncomment and adapt it to your identity provider.
+
+## stdio transport
+
+A stdio server runs in the client's process and inherits its permissions. There is no port to protect; the client controls who can start the process. Keep the binary and its config trustworthy.
+
+## Other hardening notes
+
+- `check` runs the suite's `dns-rebinding` protocol scenario against your server when conformance is enabled, which covers the Origin protection above.
+- Tool handler errors become `isError` results, not protocol errors — clients can surface them to the model without leaking stack traces, as long as your handlers return plain errors.
+
+## Next steps
+
+- [Transports, protocol, features](/mcpgen/guides/transports-and-features/) — how to enable `oauth`, `tasks`, `skills`.
+- [Deploy with Docker](/mcpgen/guides/deploy-docker/) — container defaults.
+- [check and conformance](/mcpgen/concepts/check-and-conformance/) — what the pipeline verifies.

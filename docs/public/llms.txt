@@ -1,0 +1,39 @@
+# mcpgen documentation
+
+mcpgen is a CLI that generates, extends, and verifies MCP (Model Context Protocol) servers in Go.
+Generated projects pin github.com/modelcontextprotocol/go-sdk v1.8.0 and target MCP spec 2026-07-28.
+
+Docs site: https://stdout.alesr.me/mcpgen/
+Repository: https://github.com/alesr/mcpgen
+
+## Pages
+
+- Quickstart: https://stdout.alesr.me/mcpgen/quickstart/
+- Tutorial (weather server end to end): https://stdout.alesr.me/mcpgen/tutorial/
+- Concepts:
+  - Ownership model and regeneration: https://stdout.alesr.me/mcpgen/concepts/ownership-model/
+  - Marker regions and add: https://stdout.alesr.me/mcpgen/concepts/marker-regions/
+  - Project layout: https://stdout.alesr.me/mcpgen/concepts/project-layout/
+  - check and conformance: https://stdout.alesr.me/mcpgen/concepts/check-and-conformance/
+  - Security model: https://stdout.alesr.me/mcpgen/concepts/security-model/
+- How-to guides:
+  - Add tools, prompts, resources: https://stdout.alesr.me/mcpgen/guides/add-capabilities/
+  - Transports, protocol, features: https://stdout.alesr.me/mcpgen/guides/transports-and-features/
+  - Regenerate safely: https://stdout.alesr.me/mcpgen/guides/regenerate-safely/
+  - Run check in CI: https://stdout.alesr.me/mcpgen/guides/check-in-ci/
+  - Drive mcpgen from agents: https://stdout.alesr.me/mcpgen/guides/drive-from-agents/
+  - Deploy with Docker: https://stdout.alesr.me/mcpgen/guides/deploy-docker/
+- Reference (generated from source by tools/docgen):
+  - CLI commands and flags: https://stdout.alesr.me/mcpgen/reference/generated/cli/
+  - mcpgen.json fields: https://stdout.alesr.me/mcpgen/reference/generated/config/
+  - Machine interface (JSON envelope, exit codes, error codes): https://stdout.alesr.me/mcpgen/reference/generated/machine-interface/
+  - Generated files and check stages: https://stdout.alesr.me/mcpgen/reference/generated/project-files/
+- Project:
+  - Contributing and architecture: https://stdout.alesr.me/mcpgen/project/contributing/
+  - FAQ and troubleshooting: https://stdout.alesr.me/mcpgen/project/faq/
+
+## Machine-readable contract
+
+Run `mcpgen schema` for the full CLI contract (commands, flags, exit codes, JSON envelope, mcpgen.json JSON Schema).
+`mcpgen mcp` runs mcpgen as a stdio MCP server with tools mcpgen_new, mcpgen_add, mcpgen_check, mcpgen_schema.
+Repo files for agents: AGENTS.md and SKILL.md in the repository root.

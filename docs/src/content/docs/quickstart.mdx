@@ -1,0 +1,98 @@
+---
+title: Quickstart
+description: Generate and verify an MCP server in 60 seconds. Every command on this page was executed against the real CLI.
+---
+
+Generate an HTTP MCP server, then verify it until the pipeline is green. This takes about 60 seconds. Every command below was run against the real CLI; output is trimmed with `...`.
+
+## 1. Install
+
+```sh
+go install github.com/alesr/mcpgen@latest
+```
+
+Requires Go 1.26 or newer. Node.js/npx are optional (conformance suite only).
+
+## 2. Generate a server
+
+```sh
+mcpgen new ./weather --name weather --module example.com/weather --transport http --json
+```
+
+Real output (trimmed):
+
+```json
+{
+  "ok": true,
+  "result": {
+    "dir": "./weather",
+    "files_written": [
+      ".github/workflows/ci.yml",
+      "cmd/weather/main.go",
+      "internal/mcpapp/mcpapp.go",
+      "internal/mcpapp/tools.go",
+      "internal/mcpapp/tools/handlers/greet.go",
+      "mcpgen.json",
+      "..."
+    ],
+    "files_skipped": [],
+    "check": { "ok": true, "stages": [ { "name": "config", "status": "passed" }, "..." ] }
+  },
+  "error": null,
+  "next_actions": [
+    "cd ./weather",
+    "mcpgen check ./weather --json",
+    "make -C ./weather check"
+  ]
+}
+```
+
+`new` runs the full verification pipeline after writing files (unless `--no-check`). Exit code is 0.
+
+## 3. Verify
+
+```sh
+mcpgen check ./weather --json
+```
+
+Human output of the same run looks like this (real output):
+
+```text
+[passed] config — mcpgen.json valid (version 1, 1 tools, 1 prompts, 1 resources)
+[passed] serverjson — server.json valid (MCP Registry descriptor)
+[passed] tidy — go mod tidy
+[passed] fmt — gofmt clean
+[passed] vet — go vet clean
+[passed] build — go build ok
+[passed] test — go test -race ok
+[passed] conformance — conformance passed against http://127.0.0.1:61255/mcp: 8/30 checks passed; ...
+```
+
+Exit 0 means every stage passed. On failure, the JSON envelope carries `error.stage`, `error.code`, and `error.fix` with the `file:line` of the first failure.
+
+## 4. Run it
+
+```sh
+cd weather
+go run ./cmd/weather            # listens on 127.0.0.1:8080 by default
+curl -s http://127.0.0.1:8080/healthz   # -> ok
+```
+
+## 5. Extend
+
+```sh
+mcpgen add tool tools/health.json --dir ./weather --json
+mcpgen check ./weather --json
+```
+
+`add` appends the entry to `mcpgen.json`, creates the user-owned handler files, and inserts the registration into the marker region of `internal/mcpapp/tools.go`. Your files are never touched.
+
+## Prefer to let an AI do this?
+
+mcpgen is itself an MCP server, not only a CLI. Install it in your MCP client. The model can then generate, extend, and verify servers for you — see [drive mcpgen from agents](/mcpgen/guides/drive-from-agents/).
+
+## Next steps
+
+- [Tutorial](/mcpgen/tutorial/) — the same flow with a tool, a prompt, and a resource, end to end.
+- [CLI reference](/mcpgen/reference/generated/cli/) — every command and flag.
+- [Machine interface](/mcpgen/reference/generated/machine-interface/) — the JSON envelope and exit codes for agents.

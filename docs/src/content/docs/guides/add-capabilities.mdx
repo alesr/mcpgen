@@ -1,0 +1,138 @@
+---
+title: Add tools, prompts, and resources
+description: Goal-oriented recipes for `mcpgen add` — tool, prompt, resource — and for removing a capability.
+---
+
+Use `mcpgen add` to extend an existing project. Never hand-edit the marker regions; see [marker regions](/mcpgen/concepts/marker-regions/).
+
+## Add a tool
+
+Write a spec file, for example `specs/health.json`:
+
+```json
+{
+  "id": "health",
+  "title": "Health check",
+  "description": "Reports server health.",
+  "inputSchema": { "type": "object", "properties": {} },
+  "readOnly": true
+}
+```
+
+Then:
+
+```sh
+mcpgen add tool specs/health.json --dir ./weather --json
+```
+
+```json
+{
+  "ok": true,
+  "result": {
+    "kind": "tool",
+    "id": "health",
+    "files_written": [
+      "internal/mcpapp/tools/handlers/health.go",
+      "internal/mcpapp/tools/handlers/health_test.go"
+    ],
+    "registered_in": "internal/mcpapp/tools.go"
+  },
+  "next_actions": [
+    "implement the stub in internal/mcpapp/tools/handlers/",
+    "mcpgen check ./weather --json"
+  ]
+}
+```
+
+Implement the stub, then verify:
+
+```sh
+mcpgen check ./weather --json   # loop until exit 0
+```
+
+Spec fields map to the MCP tool: `id` (required, must match `^[a-zA-Z0-9_-]+$`), `title`, `description`, `inputSchema` / `outputSchema` (raw JSON Schema draft 2020-12 objects), `readOnly` → `readOnlyHint`, `idempotent` → `idempotentHint`. The full field list is in the [mcpgen.json reference](/mcpgen/reference/generated/config/).
+
+You can also pass specs at project creation: `mcpgen new ./weather --tool specs/forecast.json ...`. Use `name=file.json` to override the spec's `id`.
+
+## Add a prompt
+
+```json
+{
+  "id": "forecast_brief",
+  "title": "Forecast brief",
+  "description": "Summarize the forecast for a city.",
+  "arguments": [{ "name": "city", "required": true }]
+}
+```
+
+```sh
+mcpgen add prompt specs/forecast_prompt.json --dir ./weather --json
+```
+
+Creates `internal/mcpapp/prompts/forecast_brief.go` (+ test) and registers it in `internal/mcpapp/prompts.go`.
+
+## Add a resource
+
+```json
+{
+  "id": "alerts_feed",
+  "title": "Alerts feed",
+  "description": "Active alerts as a text feed.",
+  "uri": "file:///alerts.txt",
+  "mimeType": "text/plain",
+  "text": "No active alerts."
+}
+```
+
+```sh
+mcpgen add resource specs/alerts_resource.json --dir ./weather --json
+```
+
+Creates `internal/mcpapp/resources/alerts_feed.go` (+ test) and registers it in `internal/mcpapp/resources.go`. Use `uriTemplate` (RFC 6570) instead of `uri` for resource templates; exactly one of the two.
+
+## Useful flags
+
+| Flag | Effect |
+|---|---|
+| `--dir` | Project root (default `.`; must contain `mcpgen.json`) |
+| `--json` | JSON envelope on stdout |
+| `--dry-run` | Print the plan; write nothing |
+| `--force` | Overwrite an existing user-owned handler file |
+| `--no-check` | Skip the post-add pipeline |
+| `--conformance` / `--no-conformance` | Force the conformance stage on/off in the post-add pipeline |
+
+## Remove a capability
+
+1. Delete the entry from `mcpgen.json`.
+2. Delete its user-owned files first, for example `internal/mcpapp/tools/handlers/health.go` and `health_test.go`.
+3. Regenerate:
+
+```sh
+mcpgen new ./weather --force --no-check
+```
+
+The regen removes the registration from the marker region and prunes the orphaned manifest entries.
+
+## Error cases (verified)
+
+```sh
+mcpgen add tool specs/forecast.json --dir ./weather --json   # same id twice
+```
+
+```json
+{ "ok": false, "error": { "stage": "add", "code": "CONFLICT",
+  "message": "tool \"get_forecast\" is already registered in weather/mcpgen.json; fix: choose a different id",
+  "exit_code": 5 } }
+```
+
+An id like `"bad id!"` fails validation before any file is written (exit 2, `SPEC_INVALID`):
+
+```text
+invalid tool spec: id must match ^[a-zA-Z0-9_-]+$ (letters, digits, underscore, hyphen only): tools[2] id "bad id!"
+```
+
+## Next steps
+
+- [Marker regions and `add`](/mcpgen/concepts/marker-regions/) — how insertion works and what breaks it.
+- [Regenerate safely](/mcpgen/guides/regenerate-safely/) — what happens to your files on regen.
+- [mcpgen.json reference](/mcpgen/reference/generated/config/) — every spec field.

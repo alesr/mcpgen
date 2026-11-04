@@ -1,0 +1,52 @@
+---
+title: What `check` and conformance do — and do not — guarantee
+description: The staged verification pipeline, its skip rules, and an honest reading of the MCP conformance results.
+---
+
+`mcpgen check <dir>` runs a staged pipeline and reports every stage. Exit 0 means no stage failed. The stage list below is generated from `internal/checks/checks.go` — see [the reference page](/mcpgen/reference/generated/project-files/).
+
+```text
+prerequisite → config → serverjson → tidy → fmt → vet → build → test → conformance → inspector*
+```
+
+- **prerequisite** — the Go toolchain is on `PATH` (else the pipeline stops with exit 6). This stage appears in the output only when Go is missing.
+- **config** — `mcpgen.json` loads and validates (format version 1). A missing config exits 3 (`NOT_MCPGEN_PROJECT`); an invalid one exits 2 (`CONFIG_INVALID`); an unsupported version exits 2 (`CONFIG_VERSION_UNSUPPORTED`).
+- **serverjson** — `server.json` is a valid MCP Registry descriptor (required fields, semver version, one OCI package block).
+- **tidy** — `go mod tidy` succeeds, and `go.mod` still pins `github.com/modelcontextprotocol/go-sdk v1.8.0`.
+- **fmt / vet / build / test** — `gofmt -l .` is empty, `go vet ./...` is clean, `go build ./...` succeeds, `go test -race ./...` passes.
+- **conformance** — the official `@modelcontextprotocol/conformance` suite, run via `npx` against the built server on a loopback address.
+- **inspector*** — only with `--inspector`. An Inspector v2 CLI smoke check (tools/list plus one tools/call). A debugging aid, not a gate.
+
+Flags: `--json`, `--conformance` / `--no-conformance`, `--inspector`, `--timeout` (default `10m`).
+
+## Skip rules
+
+- Stages after a failed `config` are skipped with reason `config invalid`.
+- `conformance` auto-enables only when node and npx are present, the transport is `http`, and the protocol is `compat`. It is skipped for stdio servers and for `latest-only` servers, because the suite speaks the legacy initialize handshake (protocol 2025-11-25 and earlier), which a latest-only server rejects by design. Forcing it with `--conformance` and no node/npx fails with exit 6.
+- `inspector` runs only when requested.
+
+## Reading the conformance result honestly
+
+A real conformance line from a default generated server:
+
+```text
+conformance passed against http://127.0.0.1:61255/mcp: 8/30 checks passed; 22 failed scenarios could not be classified and did not gate: completion-complete, tools-call-simple-text, ...
+```
+
+What this means:
+
+- The suite mixes **protocol-level scenarios** (initialize, ping, list methods, dns-rebinding) that every spec-compliant server must pass, with **capability-fixture scenarios** that call well-known test tools and resources (for example `test_simple_text`, `test://static-text`) that a generated server does not have.
+- Protocol-level failures gate: the stage fails with `CONFORMANCE_FAILED` (exit 1).
+- Failures caused by missing fixtures (unknown tool, resource/prompt not found, method not found) are reported as n/a and do not gate.
+- Failures that cannot be classified are reported separately as unclassified and do not gate either — this is the "22 ... did not gate" group above.
+- If the suite output cannot be parsed at all (0 checks), the stage fails closed: it never reports a pass it cannot verify.
+
+So `conformance passed` means: the server passed every protocol scenario the suite can run against it. It does not mean the suite's fixture scenarios passed — those need fixture tools you would have to implement yourself.
+
+`check` does not guarantee that your handler logic is correct — that is what your own tests (run with `-race` in the `test` stage) are for.
+
+## Next steps
+
+- [Run check in CI](/mcpgen/guides/check-in-ci/) — wire the pipeline into GitHub Actions.
+- [Machine interface](/mcpgen/reference/generated/machine-interface/) — exit codes and error codes.
+- [Security model](/mcpgen/concepts/security-model/) — what the generated server does and does not protect.
