@@ -6,11 +6,13 @@
 
 mcpgen is a CLI that generates, extends, and verifies [MCP](https://modelcontextprotocol.io) (Model Context Protocol) servers in Go. Generated projects build on the official [`go-sdk`](https://github.com/modelcontextprotocol/go-sdk) v1.8.0 and target MCP spec **2026-07-28**.
 
-Why it exists:
+Full documentation: [stdout.alesr.me/mcpgen](https://stdout.alesr.me/mcpgen/).
 
-1. **Safe regeneration** — every generated file is `mcpgen`-owned or `user`-owned, tracked with a sha256 in `.mcpgen/manifest.json`; regen never overwrites your code.
-2. **Built-in verification** — `mcpgen check` runs config validation, tidy, fmt, vet, build, `go test -race`, and the official MCP conformance suite; exit 0 means green.
-3. **Agent-friendly** — every command emits one JSON envelope (`--json`) with stable exit codes and `fix` hints, so agents loop `new → check → fix` until exit 0.
+## Why mcpgen
+
+1. **Safe regeneration.** Every generated file is `mcpgen`-owned or `user`-owned, tracked with a sha256 in `.mcpgen/manifest.json`. Regeneration never overwrites your code.
+2. **Built-in verification.** `mcpgen check` runs config validation, tidy, fmt, vet, build, `go test -race`, and the official MCP conformance suite. Exit 0 means green.
+3. **Agent-friendly.** Every command emits one JSON envelope (`--json`) with stable exit codes and `fix` hints, so agents loop `new → check → fix` until exit 0. mcpgen can also run as an MCP server, so an AI client can drive it without shell access.
 
 ## Install
 
@@ -53,11 +55,11 @@ Real check output (trimmed):
 [passed] conformance — conformance passed against http://127.0.0.1:61255/mcp: 8/30 checks passed; ...
 ```
 
-`mcpgen` with no arguments on a terminal runs an interactive flow. `mcpgen schema` prints the full machine-readable contract (commands, flags, exit codes, envelope, `mcpgen.json` JSON Schema) — the self-discovery entry point for agents.
+`mcpgen` with no arguments runs an interactive flow. `mcpgen schema` prints the full machine-readable contract (commands, flags, exit codes, envelope, `mcpgen.json` JSON Schema), the self-discovery entry point for agents. The same walkthrough, step by step: [Quickstart](https://stdout.alesr.me/mcpgen/quickstart/).
 
-## Let an AI drive it: mcpgen is also an MCP server
+## Use it from an AI agent
 
-`mcpgen mcp` runs mcpgen itself as a stdio MCP server. An MCP client (Claude Desktop, Cursor, and similar hosts) can then generate, extend, and verify MCP servers for you. Add it to your client:
+`mcpgen mcp` runs mcpgen itself as a stdio MCP server. An MCP client (Claude Desktop, Cursor, or any MCP host) can then generate, extend, and verify MCP servers for you. Add it to your client:
 
 ```json
 { "mcpServers": { "mcpgen": { "command": "mcpgen", "args": ["mcp"] } } }
@@ -87,26 +89,26 @@ Tool handlers are typed (`mcp.AddTool[In, Out]`): `<Tool>Input`/`<Tool>Output` s
 
 ## Features
 
-- **Commands**: `new`, `add tool|prompt|resource`, `check`, `schema`, `version`, `mcp` (mcpgen itself as a stdio MCP server with `mcpgen_new`/`mcpgen_add`/`mcpgen_check`/`mcpgen_schema`), plus an interactive TUI.
-- **Transports**: `stdio` (default) and stateless streamable `http` on `/mcp` with `/healthz`; loopback bind `127.0.0.1:<port>` by default, cross-site `Origin` rejected (403).
-- **Protocol modes**: `compat` (default, negotiates down to legacy versions) or `latest-only` (2026-07-28 only).
+- **Commands:** `new`, `add tool|prompt|resource`, `check`, `schema`, `version`, `mcp` (mcpgen itself as a stdio MCP server), plus an interactive TUI.
+- **Transports:** `stdio` (default) and stateless streamable `http` on `/mcp` with `/healthz`. Loopback bind `127.0.0.1:<port>` by default; cross-site `Origin` rejected (403).
+- **Protocol modes:** `compat` (default, negotiates down to legacy versions) or `latest-only` (2026-07-28 only).
 - **Opt-in features** (`--features tasks,skills,oauth`): tasks stub, skills served from `skills/`, commented OAuth wiring for 2026-07-28 authorization.
-- **Machine interface**: `--json` envelope (`ok`, `result`, `error{stage,code,message,fix,command,exit_code}`, `next_actions`); exit codes 0 ok · 1 failure · 2 usage · 3 exists/not-project · 4 permission · 5 conflict · 6 prerequisite missing.
+- **Machine interface:** `--json` envelope (`ok`, `result`, `error{stage,code,message,fix,command,exit_code}`, `next_actions`). Exit codes: 0 ok, 1 failure, 2 usage, 3 exists/not-project, 4 permission, 5 conflict, 6 prerequisite missing.
 
 ## Status and limitations
 
-- The conformance gate runs only the scenarios the official suite can run against a generated server: protocol-level scenarios gate; capability-fixture scenarios (which need well-known test tools) are reported as non-gating. A default server shows `8/30 checks passed` with 22 non-gating fixture failures — that is expected, not a bug.
-- The generated HTTP server has **no authentication** unless you enable and wire the `oauth` feature; it binds to loopback and rejects cross-site Origins, which is the default protection.
+- The conformance gate runs only the scenarios the official suite can run against a generated server: protocol-level scenarios gate; capability-fixture scenarios (which need well-known test tools) are reported as non-gating. A default server shows `8/30 checks passed` with 22 non-gating fixture failures; that is expected, not a bug.
+- The generated HTTP server has **no authentication** unless you enable and wire the `oauth` feature. It binds to loopback and rejects cross-site Origins, which is the default protection.
 - `mcpgen.json` supports config version 1 only.
 - `mcpgen` v1.0.0; generated servers pin `go-sdk v1.8.0` (the `tidy` check stage enforces the pin).
 
-## Docs and more
+## Documentation
 
-- **Documentation site**: <https://stdout.alesr.me/mcpgen/> — quickstart, end-to-end tutorial, concepts (ownership model, marker regions, security), how-to guides, and a generated reference (CLI, `mcpgen.json`, exit codes, file tree).
-- [`AGENTS.md`](AGENTS.md) — repo guidance for coding agents; [`SKILL.md`](SKILL.md) — the agent loop as a skill.
-- [Contributing](https://stdout.alesr.me/mcpgen/project/contributing/) — architecture, local checks (`make check`), releases.
+- **[Docs site](https://stdout.alesr.me/mcpgen/):** quickstart, end-to-end tutorial, concepts (ownership model, marker regions, security), how-to guides, and a generated reference (CLI, `mcpgen.json`, exit codes, file tree).
+- [`AGENTS.md`](AGENTS.md): repo guidance for coding agents. [`SKILL.md`](SKILL.md): the agent loop as a skill.
+- [Contributing](https://stdout.alesr.me/mcpgen/project/contributing/): architecture, local checks (`make check`), releases.
 - Development: `make check` (tidy, fmt, vet, race tests), `make golden`, `make docs-gen` / `make docs-build` for the docs site.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).
