@@ -78,6 +78,9 @@ func runConformance(ctx context.Context, dir string, cfg *config.Config) (string
 	if len(summary.fixtureSkipped) > 0 {
 		msg += fmt.Sprintf("; %d fixture scenarios n/a (require test tools/resources: %s)", len(summary.fixtureSkipped), strings.Join(summary.fixtureSkipped, ", "))
 	}
+	if len(summary.unparsed) > 0 {
+		msg += fmt.Sprintf("; %d failed scenarios could not be classified and did not gate: %s", len(summary.unparsed), strings.Join(summary.unparsed, ", "))
+	}
 	return msg, "", nil
 }
 
@@ -86,6 +89,7 @@ type conformanceSummary struct {
 	passed         int
 	total          int
 	fixtureSkipped []string
+	unparsed       []string
 	gatingFailures []conformanceFailure
 }
 
@@ -106,7 +110,6 @@ var (
 var fixtureErrPatterns = []string{
 	"unknown tool",
 	"not found. Available tools",
-	"Tool '",
 	"Resource not found",
 	"Prompt not found",
 	"unknown prompt",
@@ -178,8 +181,12 @@ func parseConformance(out string) conformanceSummary {
 		case len(errs) > 0 && !isFixtureError(firstErr):
 			// Unknown scenario with a non-fixture error: gate on it to be safe.
 			s.gatingFailures = append(s.gatingFailures, conformanceFailure{scenario: name, errMsg: firstErr})
-		default:
+		case len(errs) > 0:
 			s.fixtureSkipped = append(s.fixtureSkipped, name)
+		default:
+			// Failed scenario with no parseable error line: do not pretend
+			// it is a fixture skip — report it as unclassified (non-gating).
+			s.unparsed = append(s.unparsed, name)
 		}
 	}
 	return s
