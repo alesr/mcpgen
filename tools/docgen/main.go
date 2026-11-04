@@ -565,7 +565,7 @@ func dryRunPlan(o ops.NewOptions) ([]generator.FilePlan, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer os.RemoveAll(dir)
+	defer func() { _ = os.RemoveAll(dir) }()
 	o.Dir = filepath.Join(dir, "proj")
 	o.Name = "weather"
 	o.Module = "example.com/weather"
