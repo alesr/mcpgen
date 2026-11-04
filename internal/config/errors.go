@@ -10,6 +10,7 @@ var (
 	ErrTransportPortInvalid     = errors.New("transport.httpPort must be between 1 and 65535")
 	ErrProtocolInvalid          = errors.New("protocol must be \"compat\" or \"latest-only\"")
 	ErrDuplicateID              = errors.New("duplicate id")
+	ErrIDPattern                = errors.New("id must match ^[a-zA-Z0-9_-]+$ (letters, digits, underscore, hyphen only)")
 	ErrURIMissingScheme         = errors.New("uri must include a scheme (e.g. file:///, https://)")
 	ErrConfigNotFound           = errors.New("mcpgen.json not found")
 )
