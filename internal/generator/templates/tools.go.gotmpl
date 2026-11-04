@@ -25,8 +25,8 @@ func registerTools(server *mcp.Server) {
 		Name:         {{ quote .ID }},
 		Title:        {{ quote .Title }},
 		Description:  {{ quote .Description }},
-		InputSchema:  json.RawMessage({{ quote .InputSchema }}),
-		OutputSchema: json.RawMessage({{ quote .OutputSchema }}),
+		InputSchema:  json.RawMessage({{ goRaw .InputSchema }}),
+		OutputSchema: json.RawMessage({{ goRaw .OutputSchema }}),
 		Annotations: &mcp.ToolAnnotations{
 			ReadOnlyHint:   {{ .ReadOnly }},
 			IdempotentHint: {{ .Idempotent }},

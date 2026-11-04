@@ -40,5 +40,17 @@ func templateFuncs() template.FuncMap {
 	return template.FuncMap{
 		"quote": strconv.Quote,
 		"join":  strings.Join,
+		// goRaw renders a Go string literal, preferring a backtick raw
+		// literal so JSON schemas stay readable in generated code.
+		"goRaw": goRawString,
 	}
+}
+
+// goRawString returns s as a Go raw string literal (backticks) when s contains
+// no backtick, and as a quoted literal otherwise.
+func goRawString(s string) string {
+	if !strings.ContainsRune(s, '`') {
+		return "`" + s + "`"
+	}
+	return strconv.Quote(s)
 }
