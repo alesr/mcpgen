@@ -1,0 +1,71 @@
+---
+title: Run `check` in CI
+description: Wire the verification pipeline into GitHub Actions — the generated project already ships a workflow that does it.
+---
+
+Every generated project includes `.github/workflows/ci.yml`. For an HTTP project it contains two jobs (captured from the generated file):
+
+```yaml
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - run: go mod tidy
+      - run: test -z "$(gofmt -l .)"
+      - run: go vet ./...
+      - run: go build ./...
+      - run: go test -race ./...
+
+  conformance:   # only generated for --transport http
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: go mod tidy
+      - run: go build -o dist/server ./cmd/<name>
+      - name: MCP conformance suite (2026-07-28)
+        run: |
+          dist/server -addr 127.0.0.1:18080 &
+          echo $! > server.pid
+          sleep 1
+          npx --yes @modelcontextprotocol/conformance server --url http://127.0.0.1:18080/mcp
+          status=$?
+          kill $(cat server.pid) 2>/dev/null || true
+          exit $status
+```
+
+For stdio projects the workflow has only the `build-test` job; run `mcpgen check` locally for the stdio case (the conformance suite speaks HTTP).
+
+## Calling mcpgen itself in CI
+
+You do not have to rely on the generated workflow. Build mcpgen from source and drive it:
+
+```yaml
+- name: Build mcpgen
+  run: go build -o /tmp/mcpgen github.com/alesr/mcpgen@latest
+- name: Verify the project
+  run: /tmp/mcpgen check ./weather --json
+```
+
+This is exactly what this repository's own CI does in its `generate-and-verify` matrix: it generates each transport/protocol permutation into a temp dir and pushes it through `mcpgen check --json`, including conformance for HTTP. See [contributing](/mcpgen/project/contributing/).
+
+## Tips
+
+- Use `--no-conformance` in CI jobs that must run offline; the stage then skips instead of failing on a missing npx.
+- `--timeout 10m` is the default overall pipeline timeout; raise it for slow first runs (`go mod tidy` downloads modules).
+- Exit code 0 means green; any other code fails the step. Read `error.fix` in the envelope for the first failure's `file:line`.
+
+## Next steps
+
+- [check and conformance](/mcpgen/concepts/check-and-conformance/) — stages, skip rules, and what gates.
+- [Machine interface](/mcpgen/reference/generated/machine-interface/) — envelope, exit codes, error codes.
+- [Drive mcpgen from agents](/mcpgen/guides/drive-from-agents/) — the same loop from an AI agent.

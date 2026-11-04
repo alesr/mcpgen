@@ -1,0 +1,21 @@
+{
+  "name": "mcpgen-docs",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Documentation site for mcpgen, built with Astro Starlight.",
+  "engines": {
+    "node": ">=22.22.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "0.42.6",
+    "astro": "7.4.1",
+    "starlight-links-validator": "0.27.0"
+  }
+}

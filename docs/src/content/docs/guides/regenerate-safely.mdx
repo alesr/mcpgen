@@ -1,0 +1,54 @@
+---
+title: Regenerate safely after editing
+description: How to re-run `mcpgen new --force` on an existing project without losing edits — dry-run first, and what each skip reason means.
+---
+
+Regeneration is the normal way to apply config changes (transport, protocol, features, new specs). It is safe by construction: see [the ownership model](/mcpgen/concepts/ownership-model/) for the decision table. This page is the practical recipe.
+
+## Recipe
+
+```sh
+# 1. Preview the plan. Writes nothing.
+mcpgen new ./weather --force --dry-run --json
+
+# 2. Apply. Only flags you pass override the existing mcpgen.json.
+mcpgen new ./weather --transport http --force --no-check --json
+
+# 3. Verify.
+mcpgen check ./weather --json
+```
+
+The dry-run envelope contains `plan.files[]` with `path`, `action` (`create` / `overwrite` / `skip`), `owner`, and `reason` for every file. Real example after editing an mcpgen-owned file:
+
+```json
+{ "path": "internal/mcpapp/instructions.go", "action": "skip", "owner": "mcpgen",
+  "reason": "modified since generation (hash mismatch)" }
+```
+
+```json
+{ "path": "internal/mcpapp/tools/handlers/greet.go", "action": "skip", "owner": "user",
+  "reason": "user-owned file already exists" }
+```
+
+## What to expect
+
+- **Your handler code is never touched.** User-owned files always skip.
+- **mcpgen-owned files you edited also skip.** The reason is `modified since generation (hash mismatch)`. Your edit wins; regen does not overwrite it. If you want the fresh generated version, delete the file and regen, or revert your edit first.
+- **Untracked files are never clobbered** (`exists and is not managed by mcpgen`).
+- **`mcpgen.json` and `.mcpgen/manifest.json` are always rewritten.** Only explicitly passed flags override the existing config; everything else is preserved. `--features` is additive — remove a feature by editing `mcpgen.json`.
+- **One nuance:** the `tidy` stage of `check` runs `go mod tidy`, which can rewrite `go.mod`. After a `check`, `go.mod` often hashes differently than the manifest entry, so a later regen skips it with `modified since generation (hash mismatch)`. This is expected and harmless — the file keeps the tidy result.
+
+## Restore a generated file
+
+If you edited an mcpgen-owned file and want the generated version back:
+
+```sh
+rm weather/internal/mcpapp/instructions.go
+mcpgen new ./weather --force --no-check --json   # recreates it (action: create)
+```
+
+## Next steps
+
+- [Ownership model and regeneration](/mcpgen/concepts/ownership-model/) — the full decision table and diagram.
+- [Add tools, prompts, resources](/mcpgen/guides/add-capabilities/) — removal procedure.
+- [FAQ](/mcpgen/project/faq/) — recovering from a broken `mcpgen.json`.
