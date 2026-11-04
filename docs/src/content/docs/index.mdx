@@ -22,13 +22,30 @@ Three properties make it different from hand-written scaffolds:
 
 1. **Safe regeneration.** Every generated file has an owner (`mcpgen` or `user`). A manifest at `.mcpgen/manifest.json` stores a sha256 per file. Regeneration never overwrites your files and skips mcpgen-owned files you edited.
 2. **Built-in verification.** `mcpgen check` runs config validation, `go mod tidy`, `gofmt`, `go vet`, `go build`, `go test -race`, and the official MCP conformance suite. Exit 0 means green.
-3. **Agent-friendly output.** Every command emits one JSON envelope with `--json`, stable exit codes, and `fix` hints. Agents loop `new → check → fix` until exit 0. `mcpgen schema` prints the full machine-readable contract.
+3. **AI-native interface.** mcpgen is not only a CLI. It is itself an MCP server, so an AI client can generate, extend, and verify MCP servers for you. Both surfaces share one code path and emit one JSON envelope with stable exit codes and `fix` hints.
+
+## Two ways to drive it
+
+**From a terminal** — every command works manually, with a JSON envelope for scripts and agents:
+
+```sh
+mcpgen new ./weather --name weather --module example.com/weather --transport http --json
+mcpgen check ./weather --json
+```
+
+**From an AI client** — Claude Desktop, Cursor, or any MCP host installs mcpgen as a server and lets the model do the work:
+
+```json
+{ "mcpServers": { "mcpgen": { "command": "mcpgen", "args": ["mcp"] } } }
+```
+
+The model gets four tools (`mcpgen_new`, `mcpgen_add`, `mcpgen_check`, `mcpgen_schema`), discovers the contract itself via `mcpgen_schema`, and loops until `mcpgen_check` returns green — no shell access needed. See [drive mcpgen from agents](/mcpgen/guides/drive-from-agents/).
 
 ## Who it is for
 
 - Developers who want a production-shaped Go MCP server in seconds, not days.
+- AI clients and coding agents that build MCP servers for their users.
 - Teams that regenerate servers from a spec (`mcpgen.json`) and need their edits to survive.
-- AI coding agents that need a machine-readable interface with semantic exit codes.
 
 ## Install
 

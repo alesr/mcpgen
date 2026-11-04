@@ -87,6 +87,10 @@ mcpgen check ./weather --json
 
 `add` appends the entry to `mcpgen.json`, creates the user-owned handler files, and inserts the registration into the marker region of `internal/mcpapp/tools.go`. Your files are never touched.
 
+## Prefer to let an AI do this?
+
+mcpgen is itself an MCP server, not only a CLI. Install it in your MCP client and the model can generate, extend, and verify servers for you — see [drive mcpgen from agents](/mcpgen/guides/drive-from-agents/).
+
 ## Next steps
 
 - [Tutorial](/mcpgen/tutorial/) — the same flow with a tool, a prompt, and a resource, end to end.

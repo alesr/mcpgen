@@ -1,23 +1,33 @@
 ---
 title: Drive mcpgen from an AI agent
-description: Use the JSON envelope, stable exit codes, `mcpgen schema`, and `mcpgen mcp` to drive mcpgen from an agent loop.
+description: Two paths — shell agents use the --json envelope and exit codes; MCP hosts install mcpgen itself as a server and let the model build MCP servers for you.
 ---
 
-mcpgen is built machine-first. Two surfaces share one code path (`internal/ops`), so they cannot diverge: the CLI and the MCP server mode.
+mcpgen is built AI-first. One code path (`internal/ops`) serves two surfaces, so they cannot diverge:
 
-## The loop
+1. **Shell agents** (Claude Code, Cursor CLI, terminals, scripts) run the CLI with `--json` and branch on exit codes.
+2. **MCP hosts without shell access** (Claude Desktop, web clients, any MCP client) install **mcpgen itself as an MCP server** — `mcpgen mcp` — and the model drives the whole loop with tools.
+
+Both paths follow the same loop:
 
 ```text
-mcpgen schema                     # discover the contract
-  → mcpgen new ... --json         # bootstrap (or --dry-run first)
-  → implement the user-owned stubs
-  → mcpgen check ... --json       # loop until exit 0
-  → mcpgen add <kind> spec --json # extend, then check again
+discover (mcpgen schema)
+  → mcpgen new            # bootstrap (dry-run first to preview)
+  → implement the stubs    # user-owned files
+  → mcpgen check          # loop until green
+  → mcpgen add            # extend, then check again
 ```
+
+## Path 1: shell agents
 
 Read the envelope: `ok`, `result`, `error` (`stage`, `code`, `message`, `fix`, `command`, `exit_code`), and `next_actions` (always present on success and recoverable failure). Progress and logs go to stderr; stdout carries only the envelope or clean human text. Errors are always structured, even without `--json`.
 
-## Exit codes (stable — branch on them)
+```sh
+mcpgen new ./weather --name weather --module example.com/weather --transport http --json
+mcpgen check ./weather --json     # loop until exit 0
+```
+
+Exit codes are stable — branch on them:
 
 | Code | Meaning |
 |---|---|
@@ -31,34 +41,59 @@ Read the envelope: `ok`, `result`, `error` (`stage`, `code`, `message`, `fix`, `
 
 The full tables — exit codes, the 19 error codes, and the envelope schema — are generated from source on the [machine interface](/mcpgen/reference/generated/machine-interface/) page.
 
-## Self-discovery: `mcpgen schema`
+Self-discovery: `mcpgen schema` prints one JSON document with every command, flag, type, default, and example, the exit-code table, the envelope description, and the full `mcpgen.json` JSON Schema (`config_json_schema`). It is the same document that generates the [CLI reference](/mcpgen/reference/generated/cli/) page, so it never drifts from the docs.
 
-```sh
-mcpgen schema | jq '.commands[].name'   # ["new","add","check","schema","version","mcp"]
-```
+## Path 2: mcpgen as an MCP server
 
-`mcpgen schema` prints one JSON document with every command, flag, type, default, and example, the exit-code table, the envelope description, and the full `mcpgen.json` JSON Schema (`config_json_schema`). It is the same document that generates the [CLI reference](/mcpgen/reference/generated/cli/) page, so it never drifts from the docs.
-
-## MCP server mode (hosts without shell access)
-
-```sh
-mcpgen mcp    # stdio MCP server exposing mcpgen itself
-```
-
-It exposes four tools — `mcpgen_new`, `mcpgen_add`, `mcpgen_check`, `mcpgen_schema` — over stdio, backed by the same `internal/ops` package the CLI uses. Client config:
+`mcpgen mcp` runs mcpgen itself as a stdio MCP server. Add it to any MCP client:
 
 ```json
 { "mcpServers": { "mcpgen": { "command": "mcpgen", "args": ["mcp"] } } }
 ```
 
-Tool results carry the same envelope fields (`ok`, `result`, `error`, `exit_code`, `code`, `fix`).
+The server exposes four tools (captured from a real `tools/list`):
+
+| Tool | What it does | Key inputs |
+|---|---|---|
+| `mcpgen_new` | Generate a new project (`mcpgen new`) | `dir`, `name`, `module`, `transport`, `port`, `protocol`, `tools`/`prompts`/`resources` (spec objects), `features`, `dryRun`, `force`, `noCheck` |
+| `mcpgen_add` | Add a tool, prompt, or resource (`mcpgen add`) | `kind` (`tool`/`prompt`/`resource`), `spec` (the spec **object** — no file needed), `dir`, `force`, `dryRun` |
+| `mcpgen_check` | Run the verification pipeline (`mcpgen check`) | `dir`, `conformance`, `inspector`, `timeoutSec` (default 600) |
+| `mcpgen_schema` | Emit the full contract (`mcpgen schema`) | none |
+
+Two properties matter for model-driven use:
+
+- **Specs are objects, not files.** `mcpgen_add` takes the spec inline (`spec: {id, title, inputSchema, ...}`), so the model never writes temporary JSON files.
+- **Results are structured.** Every tool returns `ok`, the result payload, and on failure `error` with `code`, `exit_code`, and `fix` — the same envelope fields as the CLI. `next_actions` tells the model what to do next.
+
+Real call, captured over stdio (`tools/call mcpgen_new` with `dryRun: true`):
+
+```json
+{
+  "ok": true,
+  "dir": "./weather",
+  "next_actions": [
+    "implement handler stubs",
+    "mcpgen_check until ok=true"
+  ]
+}
+```
+
+The model loop inside the client is then:
+
+1. Call `mcpgen_schema` to learn the contract.
+2. Call `mcpgen_new` (optionally `dryRun` first) to scaffold.
+3. Write the handler logic in the user-owned files.
+4. Call `mcpgen_check`; read `fix` on failure; repeat until `ok: true`.
+5. Call `mcpgen_add` to extend, then `mcpgen_check` again.
+
+Note: the host machine still needs the Go toolchain for `new` and `check` to pass (exit code 6 / `PREREQUISITE_MISSING` otherwise). Node.js/npx are optional, for the conformance stage.
 
 ## SKILL.md
 
-The repository ships a [`SKILL.md`](https://github.com/alesr/mcpgen/blob/main/SKILL.md) that encodes this loop for agent runtimes that support skills. It states the same contract: schema first, `--json` always, loop `check` until exit 0, never edit marker regions.
+The repository ships a [`SKILL.md`](https://github.com/alesr/mcpgen/blob/main/SKILL.md) that encodes this loop for agent runtimes that support skills. It states the same contract: schema first, structured results always, loop `check` until green, never edit marker regions.
 
 ## Next steps
 
 - [Machine interface reference](/mcpgen/reference/generated/machine-interface/) — envelope, exit codes, error codes.
-- [CLI reference](/mcpgen/reference/generated/cli/) — commands and flags.
+- [CLI reference](/mcpgen/reference/generated/cli/) — commands and flags for path 1.
 - [Quickstart](/mcpgen/quickstart/) — the 60-second human version of the same loop.

@@ -55,6 +55,16 @@ Real check output (trimmed):
 
 `mcpgen` with no arguments on a terminal runs an interactive flow. `mcpgen schema` prints the full machine-readable contract (commands, flags, exit codes, envelope, `mcpgen.json` JSON Schema) — the self-discovery entry point for agents.
 
+## Let an AI drive it: mcpgen is also an MCP server
+
+You do not need a terminal at all. `mcpgen mcp` runs mcpgen itself as a stdio MCP server, so an MCP client (Claude Desktop, Cursor, and similar hosts) can generate, extend, and verify MCP servers for you. Add it to your client:
+
+```json
+{ "mcpServers": { "mcpgen": { "command": "mcpgen", "args": ["mcp"] } } }
+```
+
+The client gets four tools — `mcpgen_new`, `mcpgen_add`, `mcpgen_check`, `mcpgen_schema` — backed by the same code path as the CLI: the model discovers the contract itself, calls `mcpgen_new`, implements the stubs, and loops `mcpgen_check` until green. Tool specs are passed as objects, not files. See [drive mcpgen from agents](https://stdout.alesr.me/mcpgen/guides/drive-from-agents/).
+
 ## What you get
 
 A fresh `mcpgen new ./weather --name weather --module example.com/weather` produces (verified against a real generation):
