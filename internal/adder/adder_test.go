@@ -184,6 +184,35 @@ func TestAdd_MissingMarkers_Exit5(t *testing.T) {
 	require.Error(t, err)
 	assert.Equal(t, cli.ExitConflict, cli.ExitCodeOf(err))
 	assert.Contains(t, err.Error(), "restore the mcpgen:begin/end markers")
+
+	// Atomicity: the failed add must not leave orphan handler files behind.
+	assert.NoFileExists(t, filepath.Join(dir, "internal/mcpapp/tools/handlers/health.go"))
+	assert.NoFileExists(t, filepath.Join(dir, "internal/mcpapp/tools/handlers/health_test.go"))
+	cfg, err := config.Load(dir)
+	require.NoError(t, err)
+	assert.Nil(t, cfg.FindTool("health"), "config must be unchanged after a failed add")
+}
+
+func TestAdd_BadIDPattern_RejectedBeforeWriting(t *testing.T) {
+	t.Parallel()
+	dir := newProject(t)
+	spec := writeSpec(t, t.TempDir(), "evil.json", `{"id": "../../evil"}`)
+
+	_, err := Add(KindTool, spec, Options{Dir: dir, Version: "test", NoCheck: true})
+	require.Error(t, err)
+	ee := cli.AsExitError(err)
+	require.NotNil(t, ee)
+	assert.Equal(t, cli.CodeSpecInvalid, ee.Code)
+	assert.Contains(t, err.Error(), "id must match")
+
+	// Nothing written, config untouched: no brick.
+	assert.NoFileExists(t, filepath.Join(dir, "internal/mcpapp/tools/handlers/__"))
+	cfg, err := config.Load(dir)
+	require.NoError(t, err)
+	assert.Nil(t, cfg.FindTool("../../evil"))
+	raw, err := os.ReadFile(filepath.Join(dir, config.FileName))
+	require.NoError(t, err)
+	assert.NotContains(t, string(raw), "evil")
 }
 
 func TestAdd_ExistingUserFileSkipped(t *testing.T) {
