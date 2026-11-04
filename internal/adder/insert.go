@@ -138,6 +138,25 @@ func lineStartOffset(src []byte, offset int) int {
 	return i
 }
 
+// CheckRegion verifies that filePath parses and contains the begin/end
+// markers for region, without modifying anything. Add runs it before writing
+// any files, so a damaged registration file fails without leaving orphan
+// handler files behind.
+func CheckRegion(filePath, region string) error {
+	src, err := os.ReadFile(filePath)
+	if err != nil {
+		return cli.NewExitError(cli.ExitFailure, "add", cli.CodeIO, "read %s: %v", filePath, err)
+	}
+	fset := token.NewFileSet()
+	f, err := parser.ParseFile(fset, filePath, src, parser.ParseComments)
+	if err != nil {
+		return cli.NewExitError(cli.ExitConflict, "add", cli.CodeConflict,
+			"could not parse %s: %v; fix: restore the mcpgen:begin/end markers in %s", filePath, err, filePath)
+	}
+	_, _, err = findMarkers(fset, f, region)
+	return err
+}
+
 // RegionContains reports whether the marker region already mentions the given
 // MCP name (e.g. `Name: "get_forecast"`).
 func RegionContains(filePath, region, name string) (bool, error) {
@@ -150,11 +169,10 @@ func RegionContains(filePath, region, name string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	_, endPos, err := findMarkers(fset, f, region)
+	beginPos, endPos, err := findMarkers(fset, f, region)
 	if err != nil {
 		return false, err
 	}
-	beginPos, _, _ := findMarkers(fset, f, region)
 	lo, hi := fset.Position(beginPos).Offset, fset.Position(endPos).Offset
 	if lo > hi || hi > len(src) {
 		return false, fmt.Errorf("bad marker offsets")

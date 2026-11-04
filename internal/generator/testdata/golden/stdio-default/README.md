@@ -43,7 +43,7 @@ structs from the tool's JSON Schema, plus a handler:
 
 ```go
 func Greet(_ context.Context, _ *mcp.CallToolRequest, in GreetInput) (*mcp.CallToolResult, GreetOutput, error) {
-    return nil, GreetOutput{ /* ... */ }, nil
+    return &mcp.CallToolResult{}, GreetOutput{ /* ... */ }, nil
 }
 ```
 

@@ -168,9 +168,26 @@ func TestRun_Check_NotAProject(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()
 	code, env, _ := runCLI(t, "check", dir, "--json", "--no-conformance")
-	assert.Equal(t, cli.ExitFailure, code)
+	// Not a project: exit 3 / NOT_MCPGEN_PROJECT, matching `add` and the
+	// documented exit-code tables.
+	assert.Equal(t, cli.ExitExists, code)
 	assert.False(t, env.OK)
 	assert.Equal(t, "config", env.Error.Stage)
+	assert.Equal(t, string(cli.CodeNotMCPGenProject), string(env.Error.Code))
+}
+
+func TestRun_Check_InvalidConfig_Exit2(t *testing.T) {
+	t.Parallel()
+	// A project with a broken mcpgen.json: CONFIG_INVALID, exit 2, matching
+	// `add` and `new --force` on the same bad config.
+	dir := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "mcpgen.json"),
+		[]byte(`{"version":1,"server":{"name":"x","module":"example.com/x"},"transport":{"type":"grpc"}}`), 0o644))
+	code, env, _ := runCLI(t, "check", dir, "--json", "--no-conformance")
+	assert.Equal(t, cli.ExitUsage, code)
+	assert.False(t, env.OK)
+	assert.Equal(t, "config", env.Error.Stage)
+	assert.Equal(t, string(cli.CodeConfigInvalid), string(env.Error.Code))
 }
 
 func TestRun_New_BadTransport_Exit2(t *testing.T) {

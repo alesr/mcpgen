@@ -40,6 +40,10 @@ func TestConfig_Validate_Errors(t *testing.T) {
 		{"bad port", func(c *Config) { c.Transport.HTTPPort = 70000 }, "httpPort"},
 		{"bad protocol", func(c *Config) { c.Protocol = "bleh" }, "protocol"},
 		{"tool missing id", func(c *Config) { c.Tools = []Tool{{}} }, "tools[0].id is required"},
+		{"tool bad id pattern", func(c *Config) { c.Tools = []Tool{{ID: "../../evil"}} }, "id must match ^[a-zA-Z0-9_-]+$"},
+		{"tool bad id slash", func(c *Config) { c.Tools = []Tool{{ID: "a/b"}} }, "id must match"},
+		{"prompt bad id pattern", func(c *Config) { c.Prompts = []Prompt{{ID: "a b"}} }, "id must match"},
+		{"resource bad id pattern", func(c *Config) { c.Resources = []Resource{{ID: "x.y", URI: "file:///x"}} }, "id must match"},
 		{"duplicate tool id", func(c *Config) { c.Tools = []Tool{{ID: "a"}, {ID: "a"}} }, "duplicate id"},
 		{"bad input schema", func(c *Config) { c.Tools = []Tool{{ID: "a", InputSchema: json.RawMessage(`{invalid`)}} }, "inputSchema"},
 		{"schema not object", func(c *Config) { c.Tools = []Tool{{ID: "a", InputSchema: json.RawMessage(`{"type":"array"}`)}} }, "type=object"},
@@ -65,6 +69,18 @@ func TestConfig_Validate_Errors(t *testing.T) {
 			assert.Contains(t, err.Error(), tt.wantErr)
 		})
 	}
+}
+
+func TestConfig_Validate_IDPatternAccepted(t *testing.T) {
+	t.Parallel()
+	cfg := &Config{
+		Version:   ConfigVersion,
+		Server:    Server{Name: "s", Module: "example.com/s"},
+		Tools:     []Tool{{ID: "A-z_09-x"}},
+		Prompts:   []Prompt{{ID: "welcome_2"}},
+		Resources: []Resource{{ID: "read-me", URI: "file:///readme"}},
+	}
+	require.NoError(t, cfg.Validate())
 }
 
 func TestConfig_Validate_SchemaTypeArray(t *testing.T) {

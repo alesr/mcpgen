@@ -111,9 +111,17 @@ func Add(kind Kind, specPath string, opts Options) (*Result, error) {
 	}
 
 	res := &Result{
-		Dir:        dir,
-		Kind:       kind,
-		ConfigPath: filepath.ToSlash(filepath.Join(dir, config.FileName)),
+		Dir:          dir,
+		Kind:         kind,
+		FilesWritten: []string{},
+		FilesSkipped: []string{},
+		ConfigPath:   filepath.ToSlash(filepath.Join(dir, config.FileName)),
+	}
+
+	// Preflight the marker region before writing anything, so a damaged
+	// registration file fails (exit 5) without leaving orphan files behind.
+	if err := CheckRegion(filepath.Join(dir, registrationFile(kind)), region(kind)); err != nil {
+		return nil, err
 	}
 
 	switch kind {

@@ -54,7 +54,7 @@ Flags-only invocation (`mcpgen --name weather ...`) is accepted as shorthand for
 | `--module` | derived from name (`example.com/<name>`) | Go module path |
 | `--version` | `0.1.0` | Server version (semver) |
 | `--transport` | `stdio` | `stdio` or `http` (stateless streamable HTTP on `/mcp`, plus `/healthz`) |
-| `--port` | `8080` | HTTP listen port when `--transport http` |
+| `--port` | `8080` | HTTP listen port when `--transport http` (default bind is `127.0.0.1:<port>`; pass `-addr` to the server to expose it) |
 | `--protocol` | `compat` | `compat` (negotiate down to legacy versions) or `latest-only` (2026-07-28 only) |
 | `--tool`, `--prompt`, `--resource` | — | Spec JSON file, repeatable; `name=file.json` overrides the spec's `id` |
 | `--features` | — | Comma-separated opt-in features: `tasks`, `skills`, `oauth` |
@@ -95,7 +95,7 @@ prerequisite → config → serverjson → tidy → fmt → vet → build → te
 - **serverjson** — `server.json` is a valid MCP Registry descriptor
 - **tidy** — `go mod tidy`, plus a check that `go.mod` still pins `go-sdk v1.8.0`
 - **fmt / vet / build / test** — `gofmt -l`, `go vet`, `go build`, `go test -race`
-- **conformance** — the official `@modelcontextprotocol/conformance` suite via `npx`, run against the built server on a loopback address. Auto-enabled when node/npx are present, transport is `http`, and protocol is `compat`. Protocol-level scenarios gate; capability-fixture scenarios (which require well-known test tools) are reported as n/a. Unparseable suite output fails closed. Skipped for stdio or `latest-only`; forcing it without node/npx exits 6.
+- **conformance** — the official `@modelcontextprotocol/conformance` suite via `npx`, run against the built server on a loopback address. Auto-enabled when node/npx are present, transport is `http`, and protocol is `compat`. Protocol-level scenarios gate; capability-fixture scenarios (which require well-known test tools) are reported as n/a, and failures that cannot be classified are reported separately as unclassified (non-gating). Unparseable suite output fails closed. Skipped for stdio or `latest-only`; forcing it without node/npx exits 6.
 - **inspector*** — optional (`--inspector`) Inspector v2 CLI smoke check; a debugging aid, not a gate
 
 Flags: `--json`, `--conformance` / `--no-conformance`, `--inspector`, `--timeout` (default `10m`). Exit 0 means green; on failure `error.fix` in the envelope names the first failure with its `file:line`.
@@ -131,7 +131,7 @@ validated against JSON Schema draft **2020-12** (the draft the SDK implements).
 
 Ownership rules:
 
-- mcpgen-owned files carry a `DO NOT EDIT region: mcpgen-owned` header. User-owned handler/prompt/resource files are never overwritten (the only exception is `add --force`).
+- mcpgen-owned files carry a standard `// Code generated ... DO NOT EDIT.` header. User-owned handler/prompt/resource files are never overwritten (the only exception is `add --force`).
 - `.mcpgen/manifest.json` records an owner and sha256 for every file. On regen, mcpgen-owned files you modified since generation are skipped (hash mismatch), and untracked files are never clobbered.
 - Never hand-edit the `// mcpgen:begin/end` marker regions — use `mcpgen add`. If a marker is missing, `add` exits 5 with a fix hint.
 
@@ -151,6 +151,10 @@ Abridged shape (the full JSON Schema is embedded in `mcpgen schema`):
   "features": { "tasks": true, "skills": false, "oauth": false }
 }
 ```
+
+Tool/prompt/resource ids must match `^[a-zA-Z0-9_-]+$` (this is enforced both by
+the JSON Schema and by `mcpgen new`/`mcpgen add` before any file is written;
+ids become file names).
 
 To remove a capability: delete its entry from `mcpgen.json`, delete its user-owned files **first** (e.g. `internal/mcpapp/tools/handlers/<tool>.go` and its test), then regenerate with `mcpgen new <dir> --force --no-check`. The regen removes the registration and prunes the orphaned manifest entries.
 

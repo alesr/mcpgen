@@ -4,10 +4,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"regexp"
 	"strings"
 
 	"golang.org/x/mod/module"
 )
+
+// IDPattern is the only allowed shape for tool/prompt/resource ids. It is the
+// same pattern schema.json declares, so the in-memory validation and the JSON
+// Schema validation of mcpgen.json can never diverge. Ids become file names
+// and MCP names, so anything outside this set is rejected before any file is
+// written.
+var IDPattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
 func (c *Config) validate() []error {
 	errs := make([]error, 0)
@@ -96,6 +104,10 @@ func (c *Config) validateTools() []error {
 			errs = append(errs, fmt.Errorf("tools[%d].id is required", i))
 			continue
 		}
+		if !IDPattern.MatchString(t.ID) {
+			errs = append(errs, fmt.Errorf("%w: tools[%d] id %q", ErrIDPattern, i, t.ID))
+			continue
+		}
 		if seen[t.ID] {
 			errs = append(errs, fmt.Errorf("%w: tools[%d] id %q", ErrDuplicateID, i, t.ID))
 			continue
@@ -133,6 +145,10 @@ func (c *Config) validatePrompts() []error {
 			errs = append(errs, fmt.Errorf("prompts[%d].id is required", i))
 			continue
 		}
+		if !IDPattern.MatchString(p.ID) {
+			errs = append(errs, fmt.Errorf("%w: prompts[%d] id %q", ErrIDPattern, i, p.ID))
+			continue
+		}
 		if seen[p.ID] {
 			errs = append(errs, fmt.Errorf("%w: prompts[%d] id %q", ErrDuplicateID, i, p.ID))
 			continue
@@ -167,6 +183,10 @@ func (c *Config) validateResources() []error {
 		r := &c.Resources[i]
 		if strings.TrimSpace(r.ID) == "" {
 			errs = append(errs, fmt.Errorf("resources[%d].id is required", i))
+			continue
+		}
+		if !IDPattern.MatchString(r.ID) {
+			errs = append(errs, fmt.Errorf("%w: resources[%d] id %q", ErrIDPattern, i, r.ID))
 			continue
 		}
 		if seen[r.ID] {

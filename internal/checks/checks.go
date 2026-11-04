@@ -114,12 +114,23 @@ func Run(ctx context.Context, dir string, opts Options) Result {
 
 	stage("config", func() (string, string, error) {
 		if cfgErr != nil {
+			if errors.Is(cfgErr, config.ErrConfigNotFound) {
+				// Not an mcpgen project: exit 3, matching `add` and the
+				// documented exit-code tables.
+				ee := cli.NewExitError(cli.ExitExists, "config", cli.CodeNotMCPGenProject, "%v", cfgErr).
+					WithFix("run this command from an mcpgen-generated project root, or create one with `mcpgen new`")
+				return ee.Message, ee.Fix, ee
+			}
 			if errors.Is(cfgErr, config.ErrConfigVersionUnsupported) {
 				ee := cli.NewExitError(cli.ExitUsage, "config", cli.CodeConfigVersion, "%v", cfgErr).
 					WithFix(fmt.Sprintf("set \"version\": %d in %s, or regenerate the project with `mcpgen new --force`", config.ConfigVersion, filepath.Join(dir, config.FileName)))
 				return ee.Message, ee.Fix, ee
 			}
-			return errText(cfgErr), fixFor(cfgErr, dir), cfgErr
+			// Structured error so the envelope carries CONFIG_INVALID with
+			// exit 2, matching `add` and `new --force` on the same bad config.
+			ee := cli.NewExitError(cli.ExitUsage, "config", cli.CodeConfigInvalid, "%v", cfgErr).
+				WithFix(fixFor(cfgErr, dir))
+			return ee.Message, ee.Fix, ee
 		}
 		return fmt.Sprintf("mcpgen.json valid (version %d, %d tools, %d prompts, %d resources)",
 			cfg.Version, len(cfg.Tools), len(cfg.Prompts), len(cfg.Resources)), "", nil
@@ -150,6 +161,9 @@ func Run(ctx context.Context, dir string, opts Options) Result {
 	})
 
 	stage("fmt", func() (string, string, error) {
+		if cfgErr != nil {
+			return "", "", errSkipped("config invalid")
+		}
 		out, err := runCmd(ctx, dir, "gofmt", "-l", ".")
 		if err != nil {
 			return out, fmt.Sprintf("run `gofmt -w .` in %s", dir), err
@@ -163,6 +177,9 @@ func Run(ctx context.Context, dir string, opts Options) Result {
 	})
 
 	stage("vet", func() (string, string, error) {
+		if cfgErr != nil {
+			return "", "", errSkipped("config invalid")
+		}
 		out, err := runCmd(ctx, dir, "go", "vet", "./...")
 		if err != nil {
 			loc := firstGoLocation(out)
@@ -176,6 +193,9 @@ func Run(ctx context.Context, dir string, opts Options) Result {
 	})
 
 	stage("build", func() (string, string, error) {
+		if cfgErr != nil {
+			return "", "", errSkipped("config invalid")
+		}
 		out, err := runCmd(ctx, dir, "go", "build", "./...")
 		if err != nil {
 			loc := firstGoLocation(out)
@@ -189,6 +209,9 @@ func Run(ctx context.Context, dir string, opts Options) Result {
 	})
 
 	stage("test", func() (string, string, error) {
+		if cfgErr != nil {
+			return "", "", errSkipped("config invalid")
+		}
 		out, err := runCmd(ctx, dir, "go", "test", "-race", "./...")
 		if err != nil {
 			loc, test := firstTestFailure(out)
@@ -365,13 +388,6 @@ func firstTestFailure(out string) (loc, test string) {
 		}
 	}
 	return loc, test
-}
-
-func errText(err error) string {
-	if err == nil {
-		return ""
-	}
-	return err.Error()
 }
 
 func fixFor(err error, dir string) string {

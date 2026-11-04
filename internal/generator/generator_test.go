@@ -66,13 +66,16 @@ func TestGenerator_Run_WritesExpectedTree(t *testing.T) {
 	assert.Contains(t, string(toolsGo), "// mcpgen:end tools")
 	assert.Contains(t, string(toolsGo), "handlers.Greet")
 
-	// ownership headers
+	// ownership headers: mcpgen-owned files carry the standard generated-code
+	// marker (and a blank line, so it is not package doc); user-owned files
+	// carry a plain non-marker comment.
 	mcpappGo, err := os.ReadFile(filepath.Join(dir, "internal/mcpapp/mcpapp.go"))
 	require.NoError(t, err)
-	assert.Contains(t, string(mcpappGo), "DO NOT EDIT region: mcpgen-owned")
+	assert.Regexp(t, `(?m)^// Code generated .* DO NOT EDIT\.\n\n`, string(mcpappGo))
 	handlerGo, err := os.ReadFile(filepath.Join(dir, "internal/mcpapp/tools/handlers/greet.go"))
 	require.NoError(t, err)
 	assert.Contains(t, string(handlerGo), "User-owned")
+	assert.NotRegexp(t, `(?m)^// Code generated`, string(handlerGo))
 
 	// server.json has registry name + OCI package
 	serverJSON, err := os.ReadFile(filepath.Join(dir, "server.json"))

@@ -2,6 +2,7 @@ package app
 
 import (
 	"flag"
+	"fmt"
 	"io"
 	"strings"
 
@@ -100,8 +101,13 @@ Example:
 		"mcpgen check " + res.Dir + " --json",
 	}
 	if !jsonOut {
-		cli.Log(stderr, "added %s %q in %s (files written: %d, skipped: %d)",
-			res.Kind, res.ID, res.Dir, len(res.FilesWritten), len(res.FilesSkipped))
+		msg := fmt.Sprintf("added %s %q in %s (files written: %d", res.Kind, res.ID, res.Dir, len(res.FilesWritten))
+		if len(res.FilesSkipped) > 0 {
+			msg += fmt.Sprintf(", skipped: %d (%s)", len(res.FilesSkipped), strings.Join(res.FilesSkipped, ", "))
+		} else {
+			msg += ", skipped: 0"
+		}
+		cli.Log(stderr, "%s)", msg)
 	}
 	return emit(stdout, stderr, jsonOut, cli.EnvelopeOK(res, next))
 }
