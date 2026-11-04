@@ -24,8 +24,9 @@ Makefile, .github/workflows/ci.yml, server.json, AGENTS.md, README.md, Dockerfil
 
 Rules:
 
-1. **Never edit files marked `DO NOT EDIT region: mcpgen-owned`.** Regenerate or
-   use `mcpgen add` instead.
+1. **Never edit files carrying the standard `// Code generated ... DO NOT EDIT.` header**
+   (ownership is also recorded in `.mcpgen/manifest.json`). Regenerate or use
+   `mcpgen add` instead.
 2. **Never edit inside `// mcpgen:begin ...` / `// mcpgen:end ...` marker
    regions** in `internal/mcpapp/tools.go`, `prompts.go`, `resources.go`.
    `mcpgen add` inserts registrations there; if the markers are missing or
@@ -54,7 +55,7 @@ tool's JSON Schema, plus a handler:
 
 ```go
 func Greet(_ context.Context, _ *mcp.CallToolRequest, in GreetInput) (*mcp.CallToolResult, GreetOutput, error) {
-    return nil, GreetOutput{ /* ... */ }, nil
+    return &mcp.CallToolResult{}, GreetOutput{ /* ... */ }, nil
 }
 ```
 
