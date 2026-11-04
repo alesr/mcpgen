@@ -28,3 +28,15 @@ check: tidy fmt vet test
 .PHONY: golden
 golden:
 	UPDATE_GOLDEN=1 go test ./internal/generator -run '^TestGolden$' -count=1
+
+.PHONY: docs-gen
+docs-gen:
+	go run ./tools/docgen
+
+.PHONY: docs-dev
+docs-dev:
+	cd docs && npm ci && npm run dev
+
+.PHONY: docs-build
+docs-build:
+	cd docs && npm ci && npm run build
