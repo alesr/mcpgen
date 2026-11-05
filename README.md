@@ -100,7 +100,7 @@ Tool handlers are typed (`mcp.AddTool[In, Out]`): `<Tool>Input`/`<Tool>Output` s
 - The conformance gate runs only the scenarios the official suite can run against a generated server: protocol-level scenarios gate; capability-fixture scenarios (which need well-known test tools) are reported as non-gating. A default server shows `8/30 checks passed` with 22 non-gating fixture failures; that is expected, not a bug.
 - The generated HTTP server has **no authentication** unless you enable and wire the `oauth` feature. It binds to loopback and rejects cross-site Origins, which is the default protection.
 - `mcpgen.json` supports config version 1 only.
-- `mcpgen` v1.0.0; generated servers pin `go-sdk v1.8.0` (the `tidy` check stage enforces the pin).
+- `mcpgen` v0.3.2; generated servers pin `go-sdk v1.8.0` (the `tidy` check stage enforces the pin).
 
 ## Documentation
 
