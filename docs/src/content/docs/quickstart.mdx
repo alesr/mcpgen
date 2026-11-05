@@ -23,7 +23,7 @@ Tell the agent what you want in plain language, for example: "Create a weather M
 
 Two things to know:
 
-- The host machine needs Go 1.26 or newer. `mcpgen_check` builds and tests the generated project and fails without it.
+- The host machine needs Go 1.27 or newer. `mcpgen_check` builds and tests the generated project and fails without it.
 - mcpgen writes only inside generated projects. Implementing the handler stubs needs a filesystem tool or a shell in your client.
 
 The full walkthrough, with the four tools and their inputs, is in [drive mcpgen from agents](/mcpgen/guides/drive-from-agents/).
@@ -36,7 +36,7 @@ The full walkthrough, with the four tools and their inputs, is in [drive mcpgen 
 go install github.com/alesr/mcpgen@latest
 ```
 
-Requires Go 1.26 or newer. Node.js/npx are optional (conformance suite only).
+Requires Go 1.27 or newer. Node.js/npx are optional (conformance suite only).
 
 ### 2. Generate a server
 

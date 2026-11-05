@@ -2,7 +2,7 @@
 name: mcpgen
 description: "Deterministic Go codegen for spec-compliant MCP servers (MCP 2026-07-28, go-sdk v1.8.0). Bootstrap a server with `mcpgen new`, extend it idempotently with `mcpgen add`, and verify with `mcpgen check --json` until exit 0. Use when the user wants to create, extend, or verify a Go MCP server, or when an agent should drive MCP server development in a loop."
 license: MIT
-compatibility: "Requires the mcpgen CLI (go install github.com/alesr/mcpgen@latest), Go 1.26+, and optionally Node.js/npx for the conformance suite."
+compatibility: "Requires the mcpgen CLI (go install github.com/alesr/mcpgen@latest), Go 1.27+, and optionally Node.js/npx for the conformance suite."
 metadata:
   author: alesr
   version: "1.0.0"

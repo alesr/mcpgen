@@ -37,7 +37,7 @@ Fix: pass `--force` to regenerate, or choose a new directory.
 
 **`CONFLICT` — exit 5.** Duplicate id in `mcpgen.json`, id already in a marker region, or markers missing/unparseable in a registration file. Fix: choose a different id, or restore the `// mcpgen:begin <region>` / `// mcpgen:end <region>` markers (regen with `--force` recreates the registration files only if they are unmodified — delete a damaged one first and regen recreates it).
 
-**`PREREQUISITE_MISSING` — exit 6.** The Go toolchain is not on `PATH` (every pipeline stops here), or `--conformance` was forced without node/npx. Fix: install Go 1.26+ or Node.js, or drop the flag.
+**`PREREQUISITE_MISSING` — exit 6.** The Go toolchain is not on `PATH` (every pipeline stops here), or `--conformance` was forced without node/npx. Fix: install Go 1.27+ or Node.js, or drop the flag.
 
 **`SPEC_INVALID` — exit 2.** The spec file passed to `add` is unreadable or invalid (bad id pattern, bad JSON). Nothing is written. Fix the spec.
 

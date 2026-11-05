@@ -29,7 +29,7 @@ Operational guidance for coding agents working in `mcpgen`.
 
 ## Repository snapshot
 - Module: `github.com/alesr/mcpgen`
-- Go version: `1.26` (CLI + templates); generated projects pin `go-sdk v1.8.0`, MCP spec 2026-07-28
+- Go version: `1.27` (CLI + templates); generated projects pin `go-sdk v1.8.0`, MCP spec 2026-07-28
 - CLI entrypoint: `main.go` → `internal/app.Run(args, stdin, stdout, stderr) int` (semantic exit codes)
 - Core packages:
   - `internal/cli`: JSON envelope, exit codes, `mcpgen schema` document
