@@ -103,7 +103,7 @@ func Run(ctx context.Context, dir string, opts Options) Result {
 	if _, err := exec.LookPath("go"); err != nil {
 		stage("prerequisite", func() (string, string, error) {
 			ee := cli.NewExitError(cli.ExitPrerequisite, "prerequisite", cli.CodePrerequisite,
-				"go toolchain not found on PATH").WithFix("install Go 1.26+ (https://go.dev/dl) and re-run")
+				"go toolchain not found on PATH").WithFix("install Go 1.27+ (https://go.dev/dl) and re-run")
 			return ee.Message, ee.Fix, ee
 		})
 		res.OK = false

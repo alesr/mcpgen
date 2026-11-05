@@ -57,7 +57,7 @@ func TestGenerator_Run_WritesExpectedTree(t *testing.T) {
 	gomod, err := os.ReadFile(filepath.Join(dir, "go.mod"))
 	require.NoError(t, err)
 	assert.Contains(t, string(gomod), "github.com/modelcontextprotocol/go-sdk v1.8.0")
-	assert.Contains(t, string(gomod), "go 1.26")
+	assert.Contains(t, string(gomod), "go 1.27")
 
 	// markers present
 	toolsGo, err := os.ReadFile(filepath.Join(dir, "internal/mcpapp/tools.go"))

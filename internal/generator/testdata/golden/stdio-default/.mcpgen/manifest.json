@@ -4,7 +4,7 @@
   "files": {
     ".github/workflows/ci.yml": {
       "owner": "mcpgen",
-      "sha256": "abce979065ebec0f793eaf9cf60ba08ddcf96aca799c589b76179e26fe12fd63"
+      "sha256": "43325ecf4fb4754fa84b15fb72084824986c5cad006dd5c5097fe9ac3006bfae"
     },
     ".gitignore": {
       "owner": "mcpgen",
@@ -16,7 +16,7 @@
     },
     "Dockerfile": {
       "owner": "mcpgen",
-      "sha256": "0abcee740e09920a56d0c6801219bf1fb40bdda9d9b3ee4508c4fddb7c20f2b9"
+      "sha256": "5f7617d39e5a698324af51dbfaf9b6eb1fbfb76553d30fd9994420653536b08d"
     },
     "Makefile": {
       "owner": "mcpgen",
@@ -32,7 +32,7 @@
     },
     "go.mod": {
       "owner": "mcpgen",
-      "sha256": "0aaa9122cb8c00a075ff1c0e43f6dc81d253ea29a959ca1e28a15d4af1ab0574"
+      "sha256": "8ec150731bac3aa541e1955fa71d2554c545e7390b1b19ff7efd5c6850cf2599"
     },
     "internal/mcpapp/instructions.go": {
       "owner": "mcpgen",

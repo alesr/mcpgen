@@ -183,10 +183,10 @@ func TestCheckSDKPin(t *testing.T) {
 	write := func(content string) {
 		require.NoError(t, os.WriteFile(filepath.Join(dir, "go.mod"), []byte(content), 0o644))
 	}
-	write("module x\n\ngo 1.26\n\nrequire github.com/modelcontextprotocol/go-sdk v1.8.0\n")
+	write("module x\n\ngo 1.27\n\nrequire github.com/modelcontextprotocol/go-sdk v1.8.0\n")
 	assert.NoError(t, checkSDKPin(dir))
 
-	write("module x\n\ngo 1.26\n\nrequire github.com/modelcontextprotocol/go-sdk v1.3.0\n")
+	write("module x\n\ngo 1.27\n\nrequire github.com/modelcontextprotocol/go-sdk v1.3.0\n")
 	assert.Error(t, checkSDKPin(dir))
 }
 

@@ -1,5 +1,5 @@
 # Build mcpgen and run it as a stdio MCP server.
-FROM golang:1.26 AS build
+FROM golang:1.27 AS build
 ENV CGO_ENABLED=0
 RUN go install github.com/alesr/mcpgen@v0.3.1
 

@@ -16,7 +16,7 @@ Full documentation: [stdout.alesr.me/mcpgen](https://stdout.alesr.me/mcpgen/).
 
 ## Install
 
-Requires Go 1.26+. Node.js/npx are optional (conformance suite only).
+Requires Go 1.27+. Node.js/npx are optional (conformance suite only).
 
 ```sh
 go install github.com/alesr/mcpgen@latest
