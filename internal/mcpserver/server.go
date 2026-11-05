@@ -14,6 +14,7 @@ import (
 	"github.com/alesr/mcpgen/internal/checks"
 	"github.com/alesr/mcpgen/internal/cli"
 	"github.com/alesr/mcpgen/internal/config"
+	"github.com/alesr/mcpgen/internal/generator"
 	"github.com/alesr/mcpgen/internal/ops"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -218,17 +219,17 @@ func (in NewInput) toOptions(version string) (ops.NewOptions, error) {
 }
 
 type NewOutput struct {
-	OK           bool     `json:"ok"`
-	Dir          string   `json:"dir,omitempty"`
-	FilesWritten []string `json:"files_written,omitempty"`
-	FilesSkipped []string `json:"files_skipped,omitempty"`
-	Plan         any      `json:"plan,omitempty"`
-	Check        any      `json:"check,omitempty"`
-	Error        *string  `json:"error,omitempty"`
-	ExitCode     int      `json:"exit_code,omitempty"`
-	Code         string   `json:"code,omitempty"`
-	Fix          string   `json:"fix,omitempty"`
-	NextActions  []string `json:"next_actions,omitempty"`
+	OK           bool            `json:"ok"`
+	Dir          string          `json:"dir,omitempty"`
+	FilesWritten []string        `json:"files_written,omitempty"`
+	FilesSkipped []string        `json:"files_skipped,omitempty"`
+	Plan         *generator.Plan `json:"plan,omitempty"`
+	Check        *checks.Result  `json:"check,omitempty"`
+	Error        *string         `json:"error,omitempty"`
+	ExitCode     int             `json:"exit_code,omitempty"`
+	Code         string          `json:"code,omitempty"`
+	Fix          string          `json:"fix,omitempty"`
+	NextActions  []string        `json:"next_actions,omitempty"`
 }
 
 func newOutput(res *ops.NewResult, err error) NewOutput {
@@ -238,10 +239,10 @@ func newOutput(res *ops.NewResult, err error) NewOutput {
 		out.FilesWritten = res.FilesWritten
 		out.FilesSkipped = res.FilesSkipped
 		if res.Plan != nil {
-			out.Plan = mustUnmarshalMap(res.Plan)
+			out.Plan = res.Plan
 		}
 		if res.Check != nil {
-			out.Check = mustUnmarshalMap(res.Check)
+			out.Check = res.Check
 		}
 	}
 	if err != nil {
@@ -302,18 +303,6 @@ type CheckOutput struct {
 }
 
 type SchemaInput struct{}
-
-func mustUnmarshalMap(v any) any {
-	raw, err := json.Marshal(v)
-	if err != nil {
-		return nil
-	}
-	var out any
-	if err := json.Unmarshal(raw, &out); err != nil {
-		return nil
-	}
-	return out
-}
 
 func writeTempSpec(spec json.RawMessage) (string, func(), error) {
 	if len(spec) == 0 {
