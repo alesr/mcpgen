@@ -134,20 +134,106 @@ func NewServer(version string) *mcp.Server {
 // ---- input/output types ----
 
 type NewInput struct {
-	Dir       string            `json:"dir,omitempty" jsonschema:"Output directory, e.g. ./weather"`
-	Name      string            `json:"name,omitempty" jsonschema:"Server name"`
-	Module    string            `json:"module,omitempty" jsonschema:"Go module path, e.g. github.com/acme/weather"`
-	Version   string            `json:"version,omitempty" jsonschema:"Server version (semver)"`
-	Transport string            `json:"transport,omitempty" jsonschema:"stdio or http"`
-	Port      int               `json:"port,omitempty" jsonschema:"HTTP port when transport=http"`
-	Protocol  string            `json:"protocol,omitempty" jsonschema:"compat or latest-only"`
-	Tools     []json.RawMessage `json:"tools,omitempty" jsonschema:"Tool spec objects"`
-	Prompts   []json.RawMessage `json:"prompts,omitempty" jsonschema:"Prompt spec objects"`
-	Resources []json.RawMessage `json:"resources,omitempty" jsonschema:"Resource spec objects"`
-	Features  []string          `json:"features,omitempty" jsonschema:"Opt-in features: tasks, skills, oauth"`
-	DryRun    bool              `json:"dryRun,omitempty" jsonschema:"Plan only; write nothing"`
-	Force     bool              `json:"force,omitempty" jsonschema:"Allow generating into an existing non-empty directory"`
-	NoCheck   bool              `json:"noCheck,omitempty" jsonschema:"Skip the validation pipeline"`
+	Dir       string         `json:"dir,omitempty" jsonschema:"Output directory, e.g. ./weather"`
+	Name      string         `json:"name,omitempty" jsonschema:"Server name"`
+	Module    string         `json:"module,omitempty" jsonschema:"Go module path, e.g. github.com/acme/weather"`
+	Version   string         `json:"version,omitempty" jsonschema:"Server version (semver)"`
+	Transport string         `json:"transport,omitempty" jsonschema:"stdio or http"`
+	Port      int            `json:"port,omitempty" jsonschema:"HTTP port when transport=http"`
+	Protocol  string         `json:"protocol,omitempty" jsonschema:"compat or latest-only"`
+	Tools     []toolSpec     `json:"tools,omitempty" jsonschema:"Tool spec objects"`
+	Prompts   []promptSpec   `json:"prompts,omitempty" jsonschema:"Prompt spec objects"`
+	Resources []resourceSpec `json:"resources,omitempty" jsonschema:"Resource spec objects"`
+	Features  []string       `json:"features,omitempty" jsonschema:"Opt-in features: tasks, skills, oauth"`
+	DryRun    bool           `json:"dryRun,omitempty" jsonschema:"Plan only; write nothing"`
+	Force     bool           `json:"force,omitempty" jsonschema:"Allow generating into an existing non-empty directory"`
+	NoCheck   bool           `json:"noCheck,omitempty" jsonschema:"Skip the validation pipeline"`
+}
+
+// toolSpec is the MCP-facing shape of a tool spec. InputSchema and
+// OutputSchema use map[string]any so the SDK emits an object schema instead of
+// a byte-array (which json.RawMessage would produce).
+type toolSpec struct {
+	ID           string         `json:"id" jsonschema:"Tool id (unique, [a-zA-Z0-9_-]+)"`
+	Title        string         `json:"title,omitempty" jsonschema:"Tool title"`
+	Description  string         `json:"description,omitempty" jsonschema:"Tool description"`
+	InputSchema  map[string]any `json:"inputSchema,omitempty" jsonschema:"JSON Schema object for tool input"`
+	OutputSchema map[string]any `json:"outputSchema,omitempty" jsonschema:"JSON Schema object for tool output"`
+	ReadOnly     bool           `json:"readOnly,omitempty" jsonschema:"Maps to the tool readOnlyHint annotation"`
+	Idempotent   bool           `json:"idempotent,omitempty" jsonschema:"Maps to the tool idempotentHint annotation"`
+}
+
+func (t toolSpec) toConfig() config.Tool {
+	return config.Tool{
+		ID:           t.ID,
+		Title:        t.Title,
+		Description:  t.Description,
+		InputSchema:  marshalSpec(t.InputSchema),
+		OutputSchema: marshalSpec(t.OutputSchema),
+		ReadOnly:     t.ReadOnly,
+		Idempotent:   t.Idempotent,
+	}
+}
+
+// promptSpec is the MCP-facing shape of a prompt spec.
+type promptSpec struct {
+	ID          string          `json:"id" jsonschema:"Prompt id (unique, [a-zA-Z0-9_-]+)"`
+	Title       string          `json:"title,omitempty" jsonschema:"Prompt title"`
+	Description string          `json:"description,omitempty" jsonschema:"Prompt description"`
+	Arguments   []promptArgSpec `json:"arguments,omitempty" jsonschema:"Prompt arguments"`
+}
+
+type promptArgSpec struct {
+	Name        string `json:"name" jsonschema:"Argument name"`
+	Title       string `json:"title,omitempty" jsonschema:"Argument title"`
+	Description string `json:"description,omitempty" jsonschema:"Argument description"`
+	Required    bool   `json:"required,omitempty" jsonschema:"Whether the argument is required"`
+}
+
+func (p promptSpec) toConfig() config.Prompt {
+	args := make([]config.PromptArgument, 0, len(p.Arguments))
+	for _, a := range p.Arguments {
+		args = append(args, config.PromptArgument{
+			Name:        a.Name,
+			Title:       a.Title,
+			Description: a.Description,
+			Required:    a.Required,
+		})
+	}
+	return config.Prompt{ID: p.ID, Title: p.Title, Description: p.Description, Arguments: args}
+}
+
+// resourceSpec is the MCP-facing shape of a resource spec.
+type resourceSpec struct {
+	ID          string `json:"id" jsonschema:"Resource id (unique, [a-zA-Z0-9_-]+)"`
+	Title       string `json:"title,omitempty" jsonschema:"Resource title"`
+	Description string `json:"description,omitempty" jsonschema:"Resource description"`
+	URI         string `json:"uri,omitempty" jsonschema:"Absolute URI. Exactly one of uri/uriTemplate"`
+	URITemplate string `json:"uriTemplate,omitempty" jsonschema:"RFC 6570 URI template. Exactly one of uri/uriTemplate"`
+	MIMEType    string `json:"mimeType,omitempty" jsonschema:"Resource MIME type"`
+	Text        string `json:"text,omitempty" jsonschema:"Stub content served by the generated handler"`
+}
+
+func (r resourceSpec) toConfig() config.Resource {
+	return config.Resource{
+		ID:          r.ID,
+		Title:       r.Title,
+		Description: r.Description,
+		URI:         r.URI,
+		URITemplate: r.URITemplate,
+		MIMEType:    r.MIMEType,
+		Text:        r.Text,
+	}
+}
+
+// marshalSpec converts a decoded JSON object back to raw JSON. The map is
+// produced by the SDK's JSON unmarshal, so marshaling cannot fail.
+func marshalSpec(v map[string]any) json.RawMessage {
+	if v == nil {
+		return nil
+	}
+	raw, _ := json.Marshal(v)
+	return raw
 }
 
 func (in NewInput) toOptions(version string) (ops.NewOptions, error) {
@@ -182,26 +268,14 @@ func (in NewInput) toOptions(version string) (ops.NewOptions, error) {
 	if o.Protocol == "" {
 		o.Protocol = config.ProtocolCompat
 	}
-	for i, raw := range in.Tools {
-		var t config.Tool
-		if err := json.Unmarshal(raw, &t); err != nil {
-			return o, fmt.Errorf("tools[%d] is not a valid tool spec: %w", i, err)
-		}
-		o.Tools = append(o.Tools, t)
+	for _, spec := range in.Tools {
+		o.Tools = append(o.Tools, spec.toConfig())
 	}
-	for i, raw := range in.Prompts {
-		var p config.Prompt
-		if err := json.Unmarshal(raw, &p); err != nil {
-			return o, fmt.Errorf("prompts[%d] is not a valid prompt spec: %w", i, err)
-		}
-		o.Prompts = append(o.Prompts, p)
+	for _, spec := range in.Prompts {
+		o.Prompts = append(o.Prompts, spec.toConfig())
 	}
-	for i, raw := range in.Resources {
-		var r config.Resource
-		if err := json.Unmarshal(raw, &r); err != nil {
-			return o, fmt.Errorf("resources[%d] is not a valid resource spec: %w", i, err)
-		}
-		o.Resources = append(o.Resources, r)
+	for _, spec := range in.Resources {
+		o.Resources = append(o.Resources, spec.toConfig())
 	}
 	for _, f := range in.Features {
 		switch f {

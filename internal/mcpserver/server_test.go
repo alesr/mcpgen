@@ -12,15 +12,37 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestNewInput_ToOptions_RejectsBadInput(t *testing.T) {
+func TestNewInput_ToOptions(t *testing.T) {
 	t.Parallel()
-	in := NewInput{Tools: []json.RawMessage{[]byte(`{"id": 123}`)}}
-	_, err := in.toOptions("test")
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "tools[0]")
 
-	in2 := NewInput{Features: []string{"bogus"}}
-	_, err = in2.toOptions("test")
+	in := NewInput{
+		Tools: []toolSpec{{
+			ID:          "ping",
+			Description: "probe",
+			InputSchema: map[string]any{"type": "object"},
+			ReadOnly:    true,
+		}},
+		Prompts:   []promptSpec{{ID: "welcome", Arguments: []promptArgSpec{{Name: "name", Required: true}}}},
+		Resources: []resourceSpec{{ID: "readme", URI: "file:///readme", MIMEType: "text/plain"}},
+	}
+	o, err := in.toOptions("test")
+	require.NoError(t, err)
+
+	require.Len(t, o.Tools, 1)
+	assert.Equal(t, "ping", o.Tools[0].ID)
+	assert.True(t, o.Tools[0].ReadOnly)
+	assert.JSONEq(t, `{"type":"object"}`, string(o.Tools[0].InputSchema))
+
+	require.Len(t, o.Prompts, 1)
+	require.Len(t, o.Prompts[0].Arguments, 1)
+	assert.Equal(t, "name", o.Prompts[0].Arguments[0].Name)
+	assert.True(t, o.Prompts[0].Arguments[0].Required)
+
+	require.Len(t, o.Resources, 1)
+	assert.Equal(t, "readme", o.Resources[0].ID)
+	assert.Equal(t, "text/plain", o.Resources[0].MIMEType)
+
+	_, err = NewInput{Features: []string{"bogus"}}.toOptions("test")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "unknown feature")
 }
